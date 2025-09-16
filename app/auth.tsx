@@ -165,14 +165,4 @@ const styles = StyleSheet.create({
     borderRadius: 40,
     fontSize: 14,
   },
-  button: {
-    backgroundColor: "#3cff00ff",
-    alignItems: "center",
-    padding: 12,
-    borderRadius: 40,
-  },
-  buttonText: {
-    fontSize: 20,
-    fontWeight: "600",
-  },
 });

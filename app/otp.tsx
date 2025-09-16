@@ -29,7 +29,7 @@ const OTPScreen: React.FC = () => {
   const colors = Colors[colorScheme];
   const router = useRouter();
   const [otp, setOtp] = useState<string[]>(Array(OTP_LENGTH).fill(""));
-  const inputRefs = useRef<Array<TextInput | null>>([]);
+  const inputRefs = useRef<(TextInput | null)[]>([]);
 
   useEffect(() => {
     inputRefs.current[0]?.focus();

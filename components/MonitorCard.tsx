@@ -35,11 +35,6 @@ const MonitorCard: React.FC = () => {
           </Text>
         </View>
       </View>
-
-      {/* <Pressable style={[styles.takePictureButton]} onPress={handleTakePicture}>
-        <Camera size={20} color="#ffffff" />
-        <Text style={styles.takePictureText}>Take Picture</Text>
-      </Pressable> */}
       <CustomButton
         Icon={Camera}
         text="Take Picture"
@@ -85,9 +80,9 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     gap: 8,
   },
-  takePictureText: {
-    color: "#ffffff",
-    fontSize: 16,
-    fontWeight: "500",
-  },
+  // takePictureText: {
+  //   color: "#ffffff",
+  //   fontSize: 16,
+  //   fontWeight: "500",
+  // },
 });
