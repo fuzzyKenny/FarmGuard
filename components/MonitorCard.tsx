@@ -12,7 +12,7 @@ const MonitorCard: React.FC = () => {
 
   const handleTakePicture = async () => {
     // Alert.alert("Camera", "Adding Camera functionality soon...");
-    router.push("/camera");
+    router.push("/(protected)/camera");
   };
 
   return (

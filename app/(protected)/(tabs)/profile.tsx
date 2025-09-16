@@ -1,19 +1,20 @@
 import Avatar from "@/components/Avatar";
 import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
-import {
-  CircleHelp as HelpCircle,
-  LogOut,
-  Settings,
-} from "lucide-react-native";
+import { LogOut, Settings } from "lucide-react-native";
 import React from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 
 import CustomButton from "@/components/CustomButton";
+import { router } from "expo-router";
 
 export default function ProfileScreen() {
   const colorScheme = useColorScheme() ?? "dark";
   const colors = Colors[colorScheme];
+
+  function logOut() {
+    router.replace("/auth");
+  }
   return (
     <ScrollView
       style={[styles.container, { backgroundColor: colors.background }]}
@@ -34,12 +35,15 @@ export default function ProfileScreen() {
           Icon={Settings}
           text="Settings"
           iconProps={{ size: 20, color: colors.text }}
+          style={{ justifyContent: "space-between" }}
         />
 
         <CustomButton
           Icon={LogOut}
           text="Logout"
           iconProps={{ size: 20, color: "#e74444" }}
+          style={{ justifyContent: "space-between" }}
+          onPress={logOut}
         />
       </View>
     </ScrollView>

@@ -2,7 +2,7 @@ import { Colors } from "@/constants/Colors";
 import { Link, Stack } from "expo-router";
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
-import { useColorScheme } from "../hooks/useColorScheme";
+import { useColorScheme } from "@/hooks/useColorScheme";
 
 const NotFoundScreen = () => {
   const colorScheme = useColorScheme() ?? "dark";
@@ -15,7 +15,7 @@ const NotFoundScreen = () => {
           This screen doesn't exist.
         </Text>
         <Link
-          href="/(tabs)"
+          href="/(protected)/(tabs)"
           style={[styles.link, { color: colors.primary }]}
         >
           Go to home screen!

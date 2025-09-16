@@ -1,6 +1,6 @@
-import { useColorScheme } from "@/hooks/useColorScheme";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
+import { useColorScheme } from "@/hooks/useColorScheme";
 import { useFrameworkReady } from "@/hooks/useFrameworkReady";
 
 export default function RootLayout() {
@@ -9,12 +9,7 @@ export default function RootLayout() {
   return (
     <>
       <StatusBar style={colorScheme === "dark" ? "light" : "dark"} />
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="auth" />
-        <Stack.Screen name="otp" />
-        <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="+not-found" />
-      </Stack>
+      <Stack screenOptions={{ headerShown: false }} />
     </>
   );
 }

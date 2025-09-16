@@ -13,8 +13,15 @@ const HomeScreen = () => {
   return (
     <>
       <ScrollView
-        style={[styles.container, { backgroundColor: colors.background }]}
+        style={[
+          styles.container,
+          { paddingTop: 60, backgroundColor: colors.background },
+        ]}
         showsVerticalScrollIndicator={false}
+        contentContainerStyle={{
+          paddingBottom: 48,
+          flexGrow: 1,
+        }}
       >
         {/* Header */}
         <View style={styles.header}>
@@ -76,7 +83,20 @@ const HomeScreen = () => {
             />
           </View>
         </View>
-        <View style={styles.toolsSection}></View>
+        <View style={styles.toolsSection}>
+          <View style={styles.toolsGrid}>
+            <ToolCard
+              text="Pests & Diseases"
+              description="Identify and treat issues"
+              Icon={Bug}
+              iconColor={colors.error}
+              iconSize={32}
+              showBadge
+              count={3}
+              badgeText="Active"
+            />
+          </View>
+        </View>
       </ScrollView>
     </>
   );
@@ -87,7 +107,6 @@ export default HomeScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop: 60,
   },
   header: {
     paddingHorizontal: 16,
@@ -178,9 +197,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "500",
   },
+  toolsContainer:{
+    gap: 10
+  },
   toolsSection: {
     paddingHorizontal: 16,
-    marginBottom: 32,
   },
   sectionTitle: {
     fontSize: 20,

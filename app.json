@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "FarmGuardV3",
-    "slug": "FarmGuardV3",
+    "slug": "farmguard",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -19,7 +19,8 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "farmguard.cropraksha"
     },
     "web": {
       "output": "static",
@@ -43,6 +44,13 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "c25292d1-839a-4bd2-9daa-046986ef323c"
+      }
+    },
+    "owner": "fuzzykenny"
   }
 }

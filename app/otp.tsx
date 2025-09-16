@@ -79,7 +79,7 @@ const OTPScreen: React.FC = () => {
     //   },
     // ]);
 
-    router.replace("/(tabs)");
+    router.replace("/(protected)/(tabs)");
   };
 
   const resendOTP = () => {
