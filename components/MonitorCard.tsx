@@ -4,13 +4,15 @@ import { router } from "expo-router";
 import { Camera } from "lucide-react-native";
 import React from "react";
 import { Alert, Image, Pressable, StyleSheet, Text, View } from "react-native";
+import CustomButton from "./CustomButton";
 
 const MonitorCard: React.FC = () => {
   const colorScheme = useColorScheme() ?? "dark";
   const colors = Colors[colorScheme] || Colors.light;
 
   const handleTakePicture = async () => {
-    Alert.alert("Camera", "Adding Camera functionality soon...");
+    // Alert.alert("Camera", "Adding Camera functionality soon...");
+    router.push("/camera");
   };
 
   return (
@@ -34,10 +36,17 @@ const MonitorCard: React.FC = () => {
         </View>
       </View>
 
-      <Pressable style={[styles.takePictureButton]} onPress={handleTakePicture}>
+      {/* <Pressable style={[styles.takePictureButton]} onPress={handleTakePicture}>
         <Camera size={20} color="#ffffff" />
         <Text style={styles.takePictureText}>Take Picture</Text>
-      </Pressable>
+      </Pressable> */}
+      <CustomButton
+        Icon={Camera}
+        text="Take Picture"
+        iconProps={{ size: 20, color: "#ffffff" }}
+        style={styles.takePictureButton}
+        onPress={handleTakePicture}
+      />
     </>
   );
 };

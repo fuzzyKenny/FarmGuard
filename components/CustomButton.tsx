@@ -1,4 +1,4 @@
-import { Icon, LogOut, LucideProps } from "lucide-react-native";
+import { LucideProps } from "lucide-react-native";
 import {
   Pressable,
   Text,
@@ -9,7 +9,7 @@ import {
 import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
 
-type CustomProfileButtonProps = {
+type CustomButtonProps = {
   Icon: React.ComponentType<LucideProps>;
   iconProps?: LucideProps;
   text: string;
@@ -22,7 +22,7 @@ export default function CustomButton({
   text,
   style,
   ...props
-}: CustomProfileButtonProps) {
+}: CustomButtonProps) {
   const colorScheme = useColorScheme() ?? "dark";
   const colors = Colors[colorScheme];
   return (
@@ -36,8 +36,8 @@ export default function CustomButton({
           style,
         ]}
       >
-        <Icon {...iconProps} />
         <Text style={[styles.buttonText, { color: colors.text }]}>{text}</Text>
+        <Icon {...iconProps} />
       </Pressable>
     </>
   );
