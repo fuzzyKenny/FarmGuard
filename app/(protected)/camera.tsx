@@ -1,43 +1,65 @@
 import { StyleSheet, Text, View, Pressable, Alert } from "react-native";
-import { CameraView, CameraType, useCameraPermissions } from "expo-camera";
-import React, { useRef, useState } from "react";
+import {
+  CameraView,
+  CameraType,
+  useCameraPermissions,
+  FlashMode,
+} from "expo-camera";
+import React, { useRef, useState, useEffect } from "react";
 import { Camera as Cam, SwitchCamera, Zap } from "lucide-react-native";
 import * as MediaLibrary from "expo-media-library";
 
 const Camera = () => {
   const [facing, setFacing] = useState<CameraType>("front");
   const [permission, requestPermission] = useCameraPermissions();
-  const [mediaPermission, requestMediaPermission] = MediaLibrary.usePermissions(
-    { granularPermissions: ["photo", "video"] }
-  );
+  const [flash, setFlash] = useState<FlashMode>("off");
+  // const [mediaPermission, requestMediaPermission] = MediaLibrary.usePermissions(
+  //   { granularPermissions: ["photo", "video"] }
+  // );
 
   const camera = useRef<CameraView>(null);
 
-  if (!permission || !mediaPermission) {
+  useEffect(() => {
+    if (permission && !permission.granted) {
+      requestPermission();
+    }
+  }, [permission]);
+
+  // if (!permission || !mediaPermission) {
+  //   return <View style={styles.loadingScreen} />;
+  // }
+  if (!permission) {
     return <View style={styles.loadingScreen} />;
   }
 
   if (!permission.granted) {
+    // Don't show a button, just instruct the user to accept the system prompt
     return (
       <View style={styles.permissionScreen}>
-        <Text style={styles.permissionText}>We need camera permissions</Text>
-        <Pressable style={styles.permissionButton} onPress={requestPermission}>
-          <Text style={styles.permissionButtonText}>Grant Permission</Text>
-        </Pressable>
+        <Text style={styles.permissionText}>
+          Please grant camera permissions to continue.
+        </Text>
       </View>
     );
   }
 
-  if (!mediaPermission.granted) {
-    return (
-      <View style={styles.permissionScreen}>
-        <Text style={styles.permissionText}>We need media library permissions to save photos</Text>
-        <Pressable style={styles.permissionButton} onPress={requestMediaPermission}>
-          <Text style={styles.permissionButtonText}>Grant Media Library Permission</Text>
-        </Pressable>
-      </View>
-    );
-  }
+  // if (!mediaPermission.granted) {
+  //   return (
+  //     <View style={styles.permissionScreen}>
+  //       <Text style={styles.permissionText}>
+  //         We need media library permissions to save photos
+  //       </Text>
+  //       <Pressable
+  //         style={styles.permissionButton}
+  //         onPress={requestMediaPermission}
+  //       >
+  //         <Text style={styles.permissionButtonText}>
+  //           Grant Media Library Permission
+  //         </Text>
+  //       </Pressable>
+  //     </View>
+  //   );
+  // }
 
   function toggleCameraFacing() {
     setFacing((current) => (current === "front" ? "back" : "front"));
@@ -48,7 +70,6 @@ const Camera = () => {
       const photo = await camera.current?.takePictureAsync();
       if (photo?.uri) {
         const asset = await MediaLibrary.createAssetAsync(photo.uri);
-        Alert.alert("Photo Saved.");
         console.log("Saved Asset", asset);
       } else {
         Alert.alert("Error", "Failed to take photo.");
@@ -61,23 +82,46 @@ const Camera = () => {
 
   return (
     <View style={styles.container}>
-      <CameraView style={styles.camera} facing={facing} ref={camera}>
-        {/* Simple center focusing overlay for guidance */}
-        <View pointerEvents="none" style={styles.focusRingOuter}>
-          <View style={styles.focusRingInner} />
-        </View>
-      </CameraView>
-      <View style={styles.buttonContainer}>
-        <Pressable style={styles.iconButton} onPress={toggleCameraFacing}>
+      <CameraView
+        style={styles.camera}
+        facing={facing}
+        ref={camera}
+        autofocus="on"
+      />
+      <View style={styles.buttonFlipContainer}>
+        <Pressable
+          style={({ pressed }) => [
+            styles.iconButton,
+            pressed && { opacity: 0.6 },
+          ]}
+          onPress={toggleCameraFacing}
+        >
           <SwitchCamera size={28} color="#222" />
         </Pressable>
-        <Pressable style={styles.shutterButton} onPress={takePhoto}>
+      </View>
+      {/* <View style={styles.buttonShutterContainer}>
+        <Pressable
+         style={({pressed}) => [
+          styles.shutterButton,
+          pressed && { opacity: 0.6},
+        ]} 
+        onPress={takePhoto}
+        >
           <Cam size={40} color="#fff" />
         </Pressable>
-        <Pressable style={styles.iconButton} onPress={toggleCameraFacing}>
-          <Zap size={28} color="#222" />
-        </Pressable>
-      </View>
+      </View> */}
+      <View style={styles.buttonShutterContainer}>
+  <Pressable
+    style={({ pressed }) => [
+      styles.shutterButton,
+      pressed ? { opacity: 0.6 } : null
+    ]}
+    onPress={takePhoto}
+  >
+    <Cam size={40} color="#fff" />
+  </Pressable>
+</View>
+
     </View>
   );
 };
@@ -92,7 +136,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   camera: {
-    flex: 1,
+    height: "70%",
     alignSelf: "stretch",
     borderRadius: 24,
     overflow: "hidden",
@@ -127,17 +171,19 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     fontSize: 16,
   },
-  buttonContainer: {
+  buttonFlipContainer: {
     position: "absolute",
     bottom: 56,
-    left: 0,
-    right: 0,
-    flexDirection: "row",
-    justifyContent: "space-evenly",
-    alignItems: "center",
-    paddingHorizontal: 38,
-    gap: 24,
+    left: 30,
   },
+
+  buttonShutterContainer: {
+    position: "absolute",
+    bottom: 42,
+    left: "50%",
+    transform: [{ translateX: -36 }],
+  },
+
   iconButton: {
     backgroundColor: "#fff",
     borderRadius: 36,

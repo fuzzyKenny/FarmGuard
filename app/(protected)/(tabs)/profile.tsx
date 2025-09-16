@@ -16,7 +16,7 @@ export default function ProfileScreen() {
   const authState = useContext(AuthContext);
 
   function logOut() {
-    router.replace("/auth");
+    router.replace("/signin");
     authState.logOut;
   }
 

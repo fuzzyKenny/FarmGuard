@@ -14,8 +14,9 @@ const HomeScreen = () => {
   const authState = useContext(AuthContext);
 
   // console.log(authState.isLoggedIn);
-  if (!authState.isLoggedIn){
-    <Redirect href="/auth" />
+  if (!authState.isLoggedIn) {
+    console.log(authState.isLoggedIn);
+    // return <Redirect href="/signup" />;
   }
 
   return (

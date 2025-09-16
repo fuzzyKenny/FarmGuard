@@ -5,7 +5,6 @@ import {
   View,
   KeyboardAvoidingView,
   TextInput,
-  Alert,
   Platform,
 } from "react-native";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
@@ -18,31 +17,39 @@ import axios from "axios";
 
 const OTP_LENGTH = 6;
 
-
 const OTPScreen: React.FC = () => {
-  // Get params from Expo Router
-  const { phoneNumber, name } = useLocalSearchParams<{
-    phoneNumber: string;
-    name?: string;
-  }>();
+  const { phoneNumber, name } = useLocalSearchParams<{ phoneNumber: string; name?: string }>();
   const colorScheme = useColorScheme() ?? "dark";
   const colors = Colors[colorScheme];
   const router = useRouter();
   const [otp, setOtp] = useState<string[]>(Array(OTP_LENGTH).fill(""));
   const inputRefs = useRef<(TextInput | null)[]>([]);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
     inputRefs.current[0]?.focus();
   }, []);
 
-  // Handle OTP field changes, paste support
+  useEffect(() => {
+    if (errorMessage) {
+      const timer = setTimeout(() => setErrorMessage(null), 2500);
+      return () => clearTimeout(timer);
+    }
+  }, [errorMessage]);
+
+  // Show validation error if OTP is incomplete when verifying
+  useEffect(() => {
+    if (otp.some((v) => v === "")) {
+      setErrorMessage(null);
+    }
+  }, [otp]);
+
   const handleOtpChange = (value: string, index: number) => {
     let filtered = value.replace(/[^0-9]/g, "");
     let otpChars = filtered.split("");
     let newOtp = [...otp];
 
     if (otpChars.length > 1) {
-      // handle paste
       for (let i = 0; i < otpChars.length && index + i < OTP_LENGTH; ++i) {
         newOtp[index + i] = otpChars[i];
       }
@@ -59,60 +66,51 @@ const OTPScreen: React.FC = () => {
     }
   };
 
-  // Handle backspace navigation
   const handleKeyPress = (key: string, index: number) => {
     if (key === "Backspace" && !otp[index] && index > 0) {
       inputRefs.current[index - 1]?.focus();
     }
   };
 
-  // Backend verification using Axios
   const verifyOTP = async () => {
     const otpCode = otp.join("");
     if (otpCode.length !== OTP_LENGTH) {
-      Alert.alert("Error", "Please enter complete OTP");
+      setErrorMessage("Please enter complete OTP");
       return;
     }
     try {
-      const response = await axios.post(
-        "https://your-backend-url.com/api/user/verify-otp",
-        {
-          phoneNumber,
-          otp: otpCode,
-          name,
-        }
-      );
-      if (response.data.success) {
-        router.replace("/(protected)/(tabs)");
-      } else {
-        Alert.alert(
-          "OTP Error",
-          response.data.message || "OTP verification failed"
-        );
-      }
+      // const response = await axios.post(
+      //   `${process.env.EXPO_PUBLIC_BACKEND_URL}/api/user/verify-otp`,
+      //   { phoneNumber, otp: otpCode, name }
+      // );
+      // if (response.data.success) {
+      //   router.replace("/(protected)/(tabs)");
+      // } else {
+      //   setErrorMessage(response.data.message || "OTP verification failed");
+      // }
+      router.replace("/(protected)/(tabs)");
     } catch (err: any) {
-      Alert.alert(
-        "Backend Error",
+      setErrorMessage(
         err?.response?.data?.message ||
-          err?.message ||
-          "Could not process request"
+        err?.message ||
+        "Could not process request"
       );
     }
   };
 
-  // Resend OTP to backend
   const resendOTP = async () => {
     try {
-      await axios.post("https://your-backend-url.com/api/user/send-otp", {
-        phoneNumber,
-      });
-      Alert.alert("OTP Sent", "A new OTP has been sent to your phone number");
+      // await axios.post(
+      //   `${process.env.EXPO_PUBLIC_BACKEND_URL}/api/user/send-otp`, { phoneNumber }
+      // );
       setOtp(Array(OTP_LENGTH).fill(""));
       inputRefs.current[0]?.focus();
+      setErrorMessage("A new OTP has been sent to your phone number.");
     } catch (err: any) {
-      Alert.alert(
-        "Backend Error",
-        err?.response?.data?.message || err?.message || "Unable to resend OTP"
+      setErrorMessage(
+        err?.response?.data?.message ||
+        err?.message ||
+        "Unable to resend OTP"
       );
     }
   };
@@ -123,74 +121,64 @@ const OTPScreen: React.FC = () => {
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={[styles.container, { backgroundColor: colors.background }]}
       >
-        <SafeAreaView
-          style={[styles.container, { backgroundColor: colors.background }]}
-        >
-          <View style={{ alignItems: "center", marginBottom: 10 }}>
-            <Text style={[styles.heading, { color: colors.text }]}>
-              Verify OTP
-            </Text>
-            <Text
-              style={[
-                styles.subtitle,
-                { color: colors.textSecondary ?? colors.text },
-              ]}
-            >
-              Enter the 6-digit code.
-            </Text>
-          </View>
-
-          <View style={styles.otpOuter}>
-            <View style={styles.otpContainer}>
-              {otp.map((digit, index) => (
-                <TextInput
-                  key={index}
-                  ref={(ref) => {
-                    inputRefs.current[index] = ref;
-                  }}
-                  style={[
-                    styles.otpInput,
-                    {
-                      backgroundColor: colors.border,
-                      color: colors.text,
-                      borderColor: digit ? colors.primary : colors.border,
-                    },
-                  ]}
-                  value={digit}
-                  onChangeText={(value) => handleOtpChange(value, index)}
-                  onKeyPress={({ nativeEvent }) =>
-                    handleKeyPress(nativeEvent.key, index)
-                  }
-                  keyboardType="number-pad"
-                  inputMode="numeric"
-                  maxLength={1}
-                  textAlign="center"
-                  selectTextOnFocus
-                  autoFocus={index === 0}
-                  accessibilityLabel={`OTP digit ${index + 1}`}
-                  importantForAutofill="no"
-                  autoComplete="off"
-                />
-              ))}
+        <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+          <View style={styles.centerContent}>
+            <View style={{ alignItems: "center", marginBottom: 16 }}>
+              <Text style={[styles.heading, { color: colors.text }]}>Verify OTP</Text>
+              <Text
+                style={[
+                  styles.subtitle,
+                  { color: colors.textSecondary ?? colors.text },
+                ]}
+              >Enter the 6-digit code sent to your phone.</Text>
             </View>
-            {otp.join("").length !== OTP_LENGTH && (
-              <Text style={styles.errorText}>Please enter complete OTP</Text>
+            <View style={styles.otpOuter}>
+              <View style={styles.otpContainer}>
+                {otp.map((digit, index) => (
+                  <TextInput
+                    key={index}
+                    ref={(ref) => { inputRefs.current[index] = ref; }}
+                    style={[
+                      styles.otpInput,
+                      {
+                        backgroundColor: colors.border,
+                        color: colors.text,
+                        borderColor: digit ? colors.primary : colors.border,
+                      },
+                    ]}
+                    value={digit}
+                    onChangeText={(value) => handleOtpChange(value, index)}
+                    onKeyPress={({ nativeEvent }) => handleKeyPress(nativeEvent.key, index)}
+                    keyboardType="number-pad"
+                    inputMode="numeric"
+                    maxLength={1}
+                    textAlign="center"
+                    selectTextOnFocus
+                    autoFocus={index === 0}
+                    accessibilityLabel={`OTP digit ${index + 1}`}
+                    importantForAutofill="no"
+                    autoComplete="off"
+                  />
+                ))}
+              </View>
+            </View>
+            {errorMessage && (
+              <Text style={styles.subtleError}>{errorMessage}</Text>
             )}
-          </View>
-
-          <View style={styles.buttonContainer}>
             <CustomButton
               iconProps={{ color: colors.text }}
               style={{
                 backgroundColor: colors.primary,
                 justifyContent: "center",
+                marginTop: 32,
+                minWidth: 140,
               }}
               Icon={MoveRight}
               onPress={verifyOTP}
               text="Verify OTP"
             />
             <Text
-              style={[styles.resendText, { color: colors.primary }]}
+              style={[styles.resendText, { color: colors.primary, marginTop: 24 }]}
               onPress={resendOTP}
             >
               Didn't receive code? Resend OTP
@@ -207,8 +195,13 @@ export default OTPScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: "flex-end",
     padding: 20,
+  },
+  centerContent: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    width: "100%",
   },
   heading: {
     fontSize: 24,
@@ -222,13 +215,12 @@ const styles = StyleSheet.create({
   },
   otpOuter: {
     alignItems: "center",
-    marginBottom: 10,
-    gap: 10,
+    marginBottom: 6,
   },
   otpContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 14,
+    marginBottom: 8,
     paddingHorizontal: 20,
     gap: 12,
   },
@@ -242,22 +234,18 @@ const styles = StyleSheet.create({
     textAlign: "center",
     backgroundColor: "transparent",
   },
-  errorText: {
-    color: "#ff3333",
+  subtleError: {
+    color: "#ff8888",
     fontSize: 13,
-    marginTop: 2,
-    alignSelf: "center",
+    fontWeight: "400",
+    marginVertical: 14,
     textAlign: "center",
-  },
-  buttonContainer: {
-    marginTop: 25,
-    gap: 16,
   },
   resendText: {
-    fontSize: 16,
-    fontWeight: "500",
+    fontSize: 15,
     textAlign: "center",
+    fontWeight: "500",
     textDecorationLine: "underline",
-    marginTop: 8,
   },
 });
+
