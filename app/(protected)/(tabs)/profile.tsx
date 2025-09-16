@@ -2,19 +2,24 @@ import Avatar from "@/components/Avatar";
 import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { LogOut, Settings } from "lucide-react-native";
-import React from "react";
+import React, { useContext } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 
 import CustomButton from "@/components/CustomButton";
-import { router } from "expo-router";
+import { AuthContext } from "@/utils/authContext";
+import { Redirect, router } from "expo-router";
 
 export default function ProfileScreen() {
   const colorScheme = useColorScheme() ?? "dark";
   const colors = Colors[colorScheme];
 
+  const authState = useContext(AuthContext);
+
   function logOut() {
     router.replace("/auth");
+    authState.logOut;
   }
+
   return (
     <ScrollView
       style={[styles.container, { backgroundColor: colors.background }]}

@@ -6,6 +6,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Keyboard,
+  Alert,
 } from "react-native";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { Colors } from "@/constants/Colors";
@@ -17,23 +18,25 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "expo-router";
 import { MoveRight } from "lucide-react-native";
+import axios from "axios";
 
-// 1. Define Zod schema
 const schema = z.object({
   name: z.string().min(1, "Username is required."),
-  number: z
+  phoneNumber: z
     .string()
     .regex(/^[0-9]{10}$/, "Enter a valid 10-digit phone number"),
 });
 
 type AuthSchema = z.infer<typeof schema>;
 
+// const backendURL = process.env.BACKEND_URL
+const backendURL = process.env.EXPO_PUBLIC_BACKEND_URL; // replace with your URL
+
 const Auth = () => {
   const colorScheme = useColorScheme() ?? "dark";
   const colors = Colors[colorScheme];
   const router = useRouter();
 
-  // 2. Set up useForm with Zod resolver
   const {
     control,
     handleSubmit,
@@ -42,11 +45,29 @@ const Auth = () => {
     resolver: zodResolver(schema),
   });
 
-  const signUp = (data: AuthSchema) => {
-    console.log("Sign Up", data);
-    // Normally, send data to backend here
-    router.push("/otp");
-    Keyboard.dismiss();
+  const signUp = async (data: AuthSchema) => {
+    try {
+      // Send POST request to backend
+      const response = await axios.post(`${backendURL}/api/user/signup`, data);
+      // Handle backend response (error/success)
+      if (response.data.success) {
+        // Navigate to OTP and pass phoneNumber & userName as params
+        router.push({
+          pathname: "/otp",
+          params: { phoneNumber: data.phoneNumber, name: data.name },
+        });
+        Keyboard.dismiss();
+      } else {
+        Alert.alert("Sign Up Failed", response.data.message || "Unknown error");
+      }
+    } catch (err: any) {
+      Alert.alert(
+        "Backend Error",
+        err?.response?.data?.message ||
+          err?.message ||
+          "Could not process request"
+      );
+    }
   };
 
   return (
@@ -84,7 +105,6 @@ const Auth = () => {
                 error={errors.name?.message}
               />
             </View>
-
             <View
               style={[
                 styles.input,
@@ -98,22 +118,25 @@ const Auth = () => {
             >
               <CustomInput
                 control={control}
-                name="number"
+                name="phoneNumber"
                 placeholder="Phone Number"
                 placeholderTextColor={colors.text}
                 keyboardType="number-pad"
                 maxLength={10}
-                error={errors.number?.message}
+                error={errors.phoneNumber?.message}
               />
             </View>
           </View>
 
           <CustomButton
             Icon={MoveRight}
-            iconProps={{color: colors.text}}
+            iconProps={{ color: colors.text }}
             onPress={handleSubmit(signUp)}
             text={"Verify"}
-            style={{backgroundColor: colors.primary, justifyContent: "center"}}
+            style={{
+              backgroundColor: colors.primary,
+              justifyContent: "center",
+            }}
           />
         </SafeAreaView>
       </KeyboardAvoidingView>
@@ -122,6 +145,8 @@ const Auth = () => {
 };
 
 export default Auth;
+
+// ...styles unchanged
 
 const styles = StyleSheet.create({
   container: {

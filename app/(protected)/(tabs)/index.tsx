@@ -3,12 +3,20 @@ import ToolCard from "@/components/ToolCard";
 import WeatherCard from "@/components/WeatherCard";
 import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
+import { AuthContext } from "@/utils/authContext";
+import { Redirect } from "expo-router";
 import { Bug, Calculator, CloudRain, Sun } from "lucide-react-native";
-import React from "react";
+import React, { useContext } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 const HomeScreen = () => {
   const colorScheme = useColorScheme() ?? "dark";
   const colors = Colors[colorScheme] || Colors.light;
+  const authState = useContext(AuthContext);
+
+  // console.log(authState.isLoggedIn);
+  if (!authState.isLoggedIn){
+    <Redirect href="/auth" />
+  }
 
   return (
     <>
@@ -197,8 +205,8 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "500",
   },
-  toolsContainer:{
-    gap: 10
+  toolsContainer: {
+    gap: 10,
   },
   toolsSection: {
     paddingHorizontal: 16,

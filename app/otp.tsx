@@ -12,15 +12,21 @@ import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import CustomButton from "@/components/CustomButton";
-import { useRouter } from "expo-router";
-import { ArrowBigRight, MoveRight } from "lucide-react-native";
+import { useRouter, useLocalSearchParams } from "expo-router";
+import { MoveRight } from "lucide-react-native";
+import axios from "axios";
 
 const OTP_LENGTH = 6;
 
+
 const OTPScreen: React.FC = () => {
+  // Get params from Expo Router
+  const { phoneNumber, name } = useLocalSearchParams<{
+    phoneNumber: string;
+    name?: string;
+  }>();
   const colorScheme = useColorScheme() ?? "dark";
   const colors = Colors[colorScheme];
-
   const router = useRouter();
   const [otp, setOtp] = useState<string[]>(Array(OTP_LENGTH).fill(""));
   const inputRefs = useRef<Array<TextInput | null>>([]);
@@ -29,7 +35,7 @@ const OTPScreen: React.FC = () => {
     inputRefs.current[0]?.focus();
   }, []);
 
-  // Restrict to numbers and support paste
+  // Handle OTP field changes, paste support
   const handleOtpChange = (value: string, index: number) => {
     let filtered = value.replace(/[^0-9]/g, "");
     let otpChars = filtered.split("");
@@ -41,7 +47,6 @@ const OTPScreen: React.FC = () => {
         newOtp[index + i] = otpChars[i];
       }
       setOtp(newOtp);
-      // Focus next input or last
       inputRefs.current[
         Math.min(OTP_LENGTH - 1, index + otpChars.length)
       ]?.focus();
@@ -61,31 +66,55 @@ const OTPScreen: React.FC = () => {
     }
   };
 
-  const verifyOTP = () => {
+  // Backend verification using Axios
+  const verifyOTP = async () => {
     const otpCode = otp.join("");
     if (otpCode.length !== OTP_LENGTH) {
-      // Alert.alert("Error", "Please enter complete OTP");
-      // console.error("Error", "Please enter complete OTP.");
-      console.log("Error", "Please enter complete OTP.");
-
+      Alert.alert("Error", "Please enter complete OTP");
       return;
     }
-    // Simulate successful verification
-    console.log("Verifying OTP:", otpCode);
-    // Alert.alert("Success", "OTP verified successfully!", [
-    //   {
-    //     text: "OK",
-    //     onPress: () => router.replace("/(tabs)"),
-    //   },
-    // ]);
-
-    router.replace("/(protected)/(tabs)");
+    try {
+      const response = await axios.post(
+        "https://your-backend-url.com/api/user/verify-otp",
+        {
+          phoneNumber,
+          otp: otpCode,
+          name,
+        }
+      );
+      if (response.data.success) {
+        router.replace("/(protected)/(tabs)");
+      } else {
+        Alert.alert(
+          "OTP Error",
+          response.data.message || "OTP verification failed"
+        );
+      }
+    } catch (err: any) {
+      Alert.alert(
+        "Backend Error",
+        err?.response?.data?.message ||
+          err?.message ||
+          "Could not process request"
+      );
+    }
   };
 
-  const resendOTP = () => {
-    Alert.alert("OTP Sent", "A new OTP has been sent to your phone number");
-    setOtp(Array(OTP_LENGTH).fill(""));
-    inputRefs.current[0]?.focus();
+  // Resend OTP to backend
+  const resendOTP = async () => {
+    try {
+      await axios.post("https://your-backend-url.com/api/user/send-otp", {
+        phoneNumber,
+      });
+      Alert.alert("OTP Sent", "A new OTP has been sent to your phone number");
+      setOtp(Array(OTP_LENGTH).fill(""));
+      inputRefs.current[0]?.focus();
+    } catch (err: any) {
+      Alert.alert(
+        "Backend Error",
+        err?.response?.data?.message || err?.message || "Unable to resend OTP"
+      );
+    }
   };
 
   return (
@@ -107,7 +136,7 @@ const OTPScreen: React.FC = () => {
                 { color: colors.textSecondary ?? colors.text },
               ]}
             >
-              Enter the 6-digit code sent to your phone number
+              Enter the 6-digit code.
             </Text>
           </View>
 
@@ -144,7 +173,6 @@ const OTPScreen: React.FC = () => {
                 />
               ))}
             </View>
-
             {otp.join("").length !== OTP_LENGTH && (
               <Text style={styles.errorText}>Please enter complete OTP</Text>
             )}
