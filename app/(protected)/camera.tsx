@@ -70,7 +70,7 @@ const Camera = () => {
       const photo = await camera.current?.takePictureAsync();
       if (photo?.uri) {
         const asset = await MediaLibrary.createAssetAsync(photo.uri);
-        console.log("Saved Asset", asset);
+        // console.log("Saved Asset", asset);
       } else {
         Alert.alert("Error", "Failed to take photo.");
       }

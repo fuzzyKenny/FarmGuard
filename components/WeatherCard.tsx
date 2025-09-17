@@ -6,14 +6,13 @@ import type { SvgProps } from "react-native-svg";
 import { LinearGradientProps } from "expo-linear-gradient";
 
 // The Icon prop should be a function component (e.g., Sun, Cloudy, CloudRain)
-type WeatherCardProps  = {
+type WeatherCardProps = {
   day: string;
   temperature: string | number;
   weather: string;
   note: string;
   Icon: FC<SvgProps>;
-} & LinearGradientProps
-
+} & LinearGradientProps;
 
 const WeatherCard: FC<WeatherCardProps> = ({
   day,
@@ -27,9 +26,9 @@ const WeatherCard: FC<WeatherCardProps> = ({
     <LinearGradient {...linearGradientProps} style={styles.weatherCard}>
       <View style={styles.dayContainer}>
         <Text style={styles.weatherDay}>{day}</Text>
-        <Icon width={28} height={28} />
+        <Icon width={60} height={60} />
       </View>
-      <Text style={styles.temperature}>{temperature}</Text>
+      <Text style={styles.temperature}>{temperature}°C</Text>
       <Text style={styles.weatherDesc}>{weather}</Text>
       <Text style={styles.weatherNote}>{note}</Text>
     </LinearGradient>
@@ -52,8 +51,8 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   weatherDay: {
-    fontSize: 16,
-    fontWeight: "500",
+    fontSize: 36,
+    fontWeight: "400",
     color: "#1f2937",
   },
   temperature: {

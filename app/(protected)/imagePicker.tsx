@@ -12,10 +12,10 @@ const pickImage = async () => {
     quality: 1,
   });
 
-  console.log(result);
+  // console.log(result);
 
   if (!result.canceled) {
-    console.log(result.assets[0].uri);
+    // console.log(result.assets[0].uri);
     return result.assets[0].uri;
   }
   return null;

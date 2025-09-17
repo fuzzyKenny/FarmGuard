@@ -2,14 +2,31 @@ import Avatar from "@/components/Avatar";
 import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { LogOut, Settings } from "lucide-react-native";
-import React, { useContext } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 
 import CustomButton from "@/components/CustomButton";
 import { AuthContext } from "@/utils/authContext";
 import { Redirect, router } from "expo-router";
+const backendURL = "https://ai-crop-health.onrender.com";
+import axios from "axios";
 
 export default function ProfileScreen() {
+  const [user, setUser] = useState({ name: "" });
+
+  async function fetchUser() {
+    const response = await axios.get(`${backendURL}/api/user/`);
+    if (response.data.success) {
+      setUser(response.data.body);
+    } else {
+      console.log("Error while fetching user.:", response);
+    }
+  }
+
+  useEffect(() => {
+    fetchUser();
+  }, []);
+
   const colorScheme = useColorScheme() ?? "dark";
   const colors = Colors[colorScheme];
 
@@ -27,21 +44,17 @@ export default function ProfileScreen() {
     >
       <View style={styles.header}>
         <Avatar />
-        <Text style={[styles.name, { color: colors.text }]}>
-          Yajush Srivastava
-        </Text>
-        <Text style={[styles.email, { color: colors.textSecondary }]}>
-          yajush@randikahana.com
-        </Text>
+        <Text style={[styles.name, { color: colors.text }]}>{user.name}</Text>
       </View>
 
       <View style={[styles.section]}>
-        <CustomButton
+        
+        {/* <CustomButton
           Icon={Settings}
           text="Settings"
           iconProps={{ size: 20, color: colors.text }}
           style={{ justifyContent: "space-between" }}
-        />
+        /> */}
 
         <CustomButton
           Icon={LogOut}

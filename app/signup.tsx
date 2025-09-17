@@ -59,9 +59,9 @@ const SignUp = () => {
 
     setBackendError(null);
     try {
-      console.log("Hii");
+      // console.log("Hii");
       const response = await axios.post(`${backendURL}/api/user/signup`, data);
-      console.log(response);
+      // console.log(response);
 
       if (response.data.success) {
         router.push({

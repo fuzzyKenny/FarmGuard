@@ -4,25 +4,36 @@ import WeatherCard from "@/components/WeatherCard";
 import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { AuthContext, AuthProvider } from "@/utils/authContext";
+import axios from "axios";
 import { Redirect } from "expo-router";
 import { Bug, Calculator, CloudRain, Sun } from "lucide-react-native";
-import React, { useContext, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 const HomeScreen = () => {
   const colorScheme = useColorScheme() ?? "dark";
   const colors = Colors[colorScheme] || Colors.light;
   const authState = useContext(AuthContext);
-  const [user, setUser] = useState(null)
+  const backendURL = "https://ai-crop-health.onrender.com";
 
+  const [weatherData, setWeatherData] = useState([]);
 
-  function fetchUser(){
-    
+  async function getWeatherData() {
+    const response = await axios.get(`${backendURL}/api/weather/forecast`);
+    if (response.data.success) {
+      setWeatherData(response.data.body);
+    } else {
+      console.error(response);
+    }
   }
+
+  useEffect(() => {
+    getWeatherData();
+  }, []);
+
   // console.log(authState.isLoggedIn);
-  if (!authState.isLoggedIn) {
-    console.log(authState.isLoggedIn);
-    return <Redirect href="/signup" />;
-  }
+  // if (!authState.isLoggedIn) {
+  //   return <Redirect href="/signup" />;
+  // }
 
   return (
     <>
@@ -41,10 +52,20 @@ const HomeScreen = () => {
           {/* Header */}
           <View style={styles.header}>
             <Text style={[styles.title, { color: colors.text }]}>
+              CropRakshak
+            </Text>
+          </View>
+          {/* Monitor Section */}
+          <View
+            style={[styles.monitorSection, { backgroundColor: colors.card }]}
+          >
+            <MonitorCard />
+          </View>
+          <View style={styles.toolsSection}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>
               Weather Forcast
             </Text>
           </View>
-
           {/* Weather Cards */}
 
           <View style={styles.weatherContainer}>
@@ -56,6 +77,18 @@ const HomeScreen = () => {
               temperature={24}
               weather="Sunny, 65% humidity"
             />
+            {/* <WeatherCard
+              colors={["#f3f4f6", "#f3f4f6"]}
+              Icon={CloudRain}
+              day="Tomorrow"
+              note="Skip Watering Today"
+              temperature={19}
+              weather="Light rain. 80% humidity"
+            /> */}
+
+            {}
+          </View>
+          <View style={styles.weatherContainer}>
             <WeatherCard
               colors={["#f3f4f6", "#f3f4f6"]}
               Icon={CloudRain}
@@ -66,20 +99,8 @@ const HomeScreen = () => {
             />
           </View>
 
-          {/* Monitor Section */}
-          <View
-            style={[styles.monitorSection, { backgroundColor: colors.card }]}
-          >
-            <MonitorCard />
-          </View>
-          <View style={styles.toolsSection}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>
-              Plant Care Tools
-            </Text>
-          </View>
-
           {/* ToolsSection  */}
-          <View style={styles.toolsSection}>
+          {/* <View style={styles.toolsSection}>
             <View style={styles.toolsGrid}>
               <ToolCard
                 text="Crop Health"
@@ -99,8 +120,8 @@ const HomeScreen = () => {
                 badgeText="Active"
               />
             </View>
-          </View>
-          <View style={styles.toolsSection}>
+          </View> */}
+          {/* <View style={styles.toolsSection}>
             <View style={styles.toolsGrid}>
               <ToolCard
                 text="Pests & Diseases"
@@ -113,7 +134,7 @@ const HomeScreen = () => {
                 badgeText="Active"
               />
             </View>
-          </View>
+          </View> */}
         </ScrollView>
       </AuthProvider>
     </>

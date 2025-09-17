@@ -20,7 +20,7 @@ const MonitorCard: React.FC = () => {
       <View style={styles.monitorContent}>
         <Image
           source={{
-            uri: "https://i.pinimg.com/736x/e2/d1/47/e2d147c6d09cd98462a2d887b2a6c39e.jpg",
+            uri: "https://images.pexels.com/photos/4729741/pexels-photo-4729741.jpeg",
           }}
           style={styles.plantImage}
         />

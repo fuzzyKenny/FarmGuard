@@ -16,7 +16,7 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import { MoveRight } from "lucide-react-native";
 import axios from "axios";
 import { AuthContext } from "@/utils/authContext";
-import { saveCookie } from "@/utils/secureCookie";
+import { getCookie, saveCookie } from "@/utils/secureCookie";
 
 const OTP_LENGTH = 6;
 const COOLDOWN_TIME = 300; // 5 minutes in seconds
@@ -103,8 +103,17 @@ const OTPScreen: React.FC = () => {
         const token =
           response.data.token || response.headers["set-cookie"]?.[0];
 
-        if (token) {
+        // if (token) {
+        //   await saveCookie(token);
+        //   const saved = await getCookie();
+        //   console.log("Saved Cookie:", saved);
+        // }
+        try {
           await saveCookie(token);
+          const saved = await getCookie();
+          // console.log("Saved Cookie:", saved);
+        } catch (e) {
+          console.log("Error saving cookie:", e);
         }
 
         authState.logIn();

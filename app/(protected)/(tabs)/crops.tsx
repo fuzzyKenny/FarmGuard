@@ -1,61 +1,67 @@
-import { Colors } from '@/constants/Colors';
-import { useColorScheme } from '@/hooks/useColorScheme';
-import { Droplet, Sprout, Sun } from 'lucide-react-native';
-import React from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Colors } from "@/constants/Colors";
+import { useColorScheme } from "@/hooks/useColorScheme";
+import axios from "axios";
+import { Sprout } from "lucide-react-native";
+import React, { useEffect, useState } from "react";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
+
+function CropTile({ crop }: { crop: { name: string; health: string } }) {
+  const colorScheme = useColorScheme() ?? "dark";
+  const colors = Colors[colorScheme];
+  return (
+    <>
+      <View style={[styles.cropCard, { backgroundColor: colors.card }]}>
+        <View style={styles.cropHeader}>
+          <Sprout size={24} color="#10b981" />
+          <View style={styles.cropInfo}>
+            <Text style={[styles.cropName, { color: colors.text }]}>
+              {crop.name}
+            </Text>
+            <Text style={styles.cropStatus}>{crop.health}</Text>
+          </View>
+        </View>
+      </View>
+    </>
+  );
+}
 
 export default function CropsScreen() {
-  const colorScheme = useColorScheme() ?? 'dark';
+  const backendURL = "https://ai-crop-health.onrender.com";
+
+  const [cropData, setCropData] = useState([]);
+  const colorScheme = useColorScheme() ?? "dark";
   const colors = Colors[colorScheme];
 
+  async function getCropData() {
+    const response = await axios.get(`${backendURL}/api/crops/`);
+    if (response.data.success) {
+      setCropData(response.data.body);
+    } else {
+      console.error(response);
+    }
+  }
+
+  useEffect(() => {
+    getCropData();
+  }, []);
+
   return (
-    <ScrollView style={[styles.container, { backgroundColor: colors.background }]} showsVerticalScrollIndicator={false}>
+    <ScrollView
+      style={[styles.container, { backgroundColor: colors.background }]}
+      showsVerticalScrollIndicator={false}
+    >
       <View style={styles.header}>
         <Text style={[styles.title, { color: colors.text }]}>Your Crops</Text>
-        <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Manage and monitor your plants</Text>
+        <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
+          Manage and monitor your plants
+        </Text>
       </View>
 
-      <View style={[styles.cropCard, { backgroundColor: colors.card }]}>
-        <View style={styles.cropHeader}>
-          <Sprout size={24} color="#10b981" />
-          <View style={styles.cropInfo}>
-            <Text style={[styles.cropName, { color: colors.text }]}>Tomato Plants</Text>
-            <Text style={styles.cropStatus}>Healthy • 3 plants</Text>
-          </View>
-        </View>
-        
-        <View style={styles.cropStats}>
-          <View style={styles.statItem}>
-            <Droplet size={16} color="#3b82f6" />
-            <Text style={[styles.statText, { color: colors.textSecondary }]}>Last watered: 2 days ago</Text>
-          </View>
-          <View style={styles.statItem}>
-            <Sun size={16} color="#fbbf24" />
-            <Text style={[styles.statText, { color: colors.textSecondary }]}>Sunlight: 6-8 hours daily</Text>
-          </View>
-        </View>
-      </View>
-
-      <View style={[styles.cropCard, { backgroundColor: colors.card }]}>
-        <View style={styles.cropHeader}>
-          <Sprout size={24} color="#10b981" />
-          <View style={styles.cropInfo}>
-            <Text style={[styles.cropName, { color: colors.text }]}>Basil Garden</Text>
-            <Text style={styles.cropStatus}>Growing • 5 plants</Text>
-          </View>
-        </View>
-        
-        <View style={styles.cropStats}>
-          <View style={styles.statItem}>
-            <Droplet size={16} color="#3b82f6" />
-            <Text style={[styles.statText, { color: colors.textSecondary }]}>Last watered: Today</Text>
-          </View>
-          <View style={styles.statItem}>
-            <Sun size={16} color="#fbbf24" />
-            <Text style={[styles.statText, { color: colors.textSecondary }]}>Sunlight: 4-6 hours daily</Text>
-          </View>
-        </View>
-      </View>
+      {cropData.length > 0 ? (
+        cropData.map((crop, index) => <CropTile crop={crop} key={index} />)
+      ) : (
+        <Text>No Crops Added</Text>
+      )}
     </ScrollView>
   );
 }
@@ -71,7 +77,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 28,
-    fontWeight: '700',
+    fontWeight: "700",
     marginBottom: 4,
   },
   subtitle: {
@@ -84,8 +90,8 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   cropHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 16,
   },
   cropInfo: {
@@ -94,19 +100,19 @@ const styles = StyleSheet.create({
   },
   cropName: {
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: "600",
     marginBottom: 2,
   },
   cropStatus: {
     fontSize: 14,
-    color: '#10b981',
+    color: "#10b981",
   },
   cropStats: {
     gap: 8,
   },
   statItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 8,
   },
   statText: {
