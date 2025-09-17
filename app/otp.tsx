@@ -20,8 +20,7 @@ import { getCookie, saveCookie } from "@/utils/secureCookie";
 
 const OTP_LENGTH = 6;
 const COOLDOWN_TIME = 300; // 5 minutes in seconds
-const backendURL =
-  process.env.EXPO_BACKEND_URL || "https://ai-crop-health.onrender.com";
+const backendURL = process.env.EXPO_BACKEND_URL;
 
 const OTPScreen: React.FC = () => {
   const authState = useContext(AuthContext);
@@ -100,7 +99,8 @@ const OTPScreen: React.FC = () => {
       // );
 
       if (false /* response?.data?.success */) {
-        const token = ""; /* response?.data?.token || response?.headers["set-cookie"]?.[0] */
+        const token =
+          ""; /* response?.data?.token || response?.headers["set-cookie"]?.[0] */
 
         // if (token) {
         //   await saveCookie(token);

@@ -1,7 +1,6 @@
 import axios from "axios";
 import * as SecureStore from "expo-secure-store";
 
-const backendURL = "https://ai-crop-health.onrender.com";
 
 // Create axios instance
 // const api = axios.create({

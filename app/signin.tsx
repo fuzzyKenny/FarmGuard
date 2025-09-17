@@ -26,7 +26,6 @@ const schema = z.object({
     .regex(/^[0-9]{10}$/, "Enter a valid 10-digit phone number"),
 });
 type SignInSchema = z.infer<typeof schema>;
-const backendURL = "https://ai-crop-health.onrender.com";
 
 const SignIn = () => {
   const colorScheme = useColorScheme() ?? "dark";

@@ -8,7 +8,6 @@ import { ScrollView, StyleSheet, Text, View } from "react-native";
 import CustomButton from "@/components/CustomButton";
 import { AuthContext } from "@/utils/authContext";
 import { Redirect, router } from "expo-router";
-const backendURL = "https://ai-crop-health.onrender.com";
 import axios from "axios";
 
 export default function ProfileScreen() {

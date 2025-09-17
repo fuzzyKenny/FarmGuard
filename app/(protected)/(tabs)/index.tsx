@@ -13,7 +13,6 @@ const HomeScreen = () => {
   const colorScheme = useColorScheme() ?? "dark";
   const colors = Colors[colorScheme] || Colors.light;
   // const authState = useContext(AuthContext);
-  const backendURL = "https://ai-crop-health.onrender.com";
 
   const [weatherData, setWeatherData] = useState([]);
 

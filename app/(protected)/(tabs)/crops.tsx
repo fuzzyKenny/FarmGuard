@@ -26,9 +26,7 @@ function CropTile({ crop }: { crop: { name: string; health: string } }) {
 }
 
 export default function CropsScreen() {
-  const backendURL = "https://ai-crop-health.onrender.com";
-
-  const [cropData, setCropData] = useState([]);
+  // const [cropData, setCropData] = useState([]);
   const colorScheme = useColorScheme() ?? "dark";
   const colors = Colors[colorScheme];
 
@@ -57,11 +55,11 @@ export default function CropsScreen() {
         </Text>
       </View>
 
-      {cropData.length > 0 ? (
+      {/* {cropData.length > 0 ? (
         cropData.map((crop, index) => <CropTile crop={crop} key={index} />)
       ) : (
         <Text>No Crops Added</Text>
-      )}
+      )} */}
     </ScrollView>
   );
 }
