@@ -12,17 +12,28 @@ import { ScrollView, StyleSheet, Text, View } from "react-native";
 const HomeScreen = () => {
   const colorScheme = useColorScheme() ?? "dark";
   const colors = Colors[colorScheme] || Colors.light;
-  // const authState = useContext(AuthContext);
+  const backendURL = "https://ai-crop-health.onrender.com";
 
-  const [weatherData, setWeatherData] = useState([]);
+  const [weatherData, setWeatherData] = useState({
+    current: {
+      temperature_2m: 0,
+      weather_description: "",
+      relative_humidity_2m: 0
+    },
+    tomorrow: {
+      temperature_2m: 0,
+      weather_description: "",
+      relative_humidity_2m: 0
+    }
+  });
 
   async function getWeatherData() {
-    // const response = await axios.get(`${backendURL}/api/weather/forecast`);
-    // if (response.data.success) {
-    //   setWeatherData(response.data.body);
-    // } else {
-    //   // console.error(response);
-    // }
+    const response = await axios.get(`${backendURL}/api/weather/forecast`);
+    if (response.data.success) {
+      setWeatherData(response.data.body);
+    } else {
+      // console.error(response);
+    }
   }
 
   useEffect(() => {
@@ -73,8 +84,11 @@ const HomeScreen = () => {
               Icon={Sun}
               day="Today"
               note="Perfect for watering!"
-              temperature={24}
-              weather="Sunny, 65% humidity"
+              temperature={weatherData.current.temperature_2m}
+              weather={{
+                description: weatherData.current.weather_description,
+                relativeHumidity: weatherData.current.relative_humidity_2m,
+              }}
             />
             {/* <WeatherCard
               colors={["#f3f4f6", "#f3f4f6"]}
@@ -93,8 +107,11 @@ const HomeScreen = () => {
               Icon={CloudRain}
               day="Tomorrow"
               note="Skip Watering Today"
-              temperature={19}
-              weather="Light rain. 80% humidity"
+              temperature={weatherData.tomorrow.temperature_2m}
+              weather={{
+                description: weatherData.tomorrow.weather_description,
+                relativeHumidity: weatherData.tomorrow.relative_humidity_2m,
+              }}
             />
           </View>
 

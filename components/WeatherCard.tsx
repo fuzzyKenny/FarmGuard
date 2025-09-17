@@ -8,8 +8,8 @@ import { LinearGradientProps } from "expo-linear-gradient";
 // The Icon prop should be a function component (e.g., Sun, Cloudy, CloudRain)
 type WeatherCardProps = {
   day: string;
-  temperature: string | number;
-  weather: string;
+  temperature: number;
+  weather: { description: string; relativeHumidity: number };
   note: string;
   Icon: FC<SvgProps>;
 } & LinearGradientProps;
@@ -29,7 +29,9 @@ const WeatherCard: FC<WeatherCardProps> = ({
         <Icon width={60} height={60} />
       </View>
       <Text style={styles.temperature}>{temperature}°C</Text>
-      <Text style={styles.weatherDesc}>{weather}</Text>
+      <Text
+        style={styles.weatherDesc}
+      >{`${weather.description}, ${weather.relativeHumidity} %`}</Text>
       <Text style={styles.weatherNote}>{note}</Text>
     </LinearGradient>
   );
