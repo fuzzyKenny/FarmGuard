@@ -26,7 +26,8 @@ const schema = z.object({
     .regex(/^[0-9]{10}$/, "Enter a valid 10-digit phone number"),
 });
 type AuthSchema = z.infer<typeof schema>;
-const backendURL = process.env.EXPO_PUBLIC_BACKEND_URL;
+const backendURL =
+  process.env.EXPO_BACKEND_URL || "https://ai-crop-health.onrender.com";
 
 const SignUp = () => {
   const colorScheme = useColorScheme() ?? "dark";
@@ -34,6 +35,7 @@ const SignUp = () => {
   const router = useRouter();
 
   const [backendError, setBackendError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false); // <--- NEW
 
   const {
     control,
@@ -52,29 +54,37 @@ const SignUp = () => {
   }, [backendError]);
 
   const signUp = async (data: AuthSchema) => {
+    if (loading) return; // <--- Prevent double taps
+    setLoading(true);
+
     setBackendError(null);
     try {
-      // Uncomment for backend integration...
-      // const response = await axios.post(`${backendURL}/api/user/signup`, data);
-      // if (response.data.success) {
-      //   router.push({
-      //     pathname: "/otp",
-      //     params: { phoneNumber: data.phoneNumber, name: data.name },
-      //   });
-      //   Keyboard.dismiss();
-      //   reset();
-      // } else {
-      //   setBackendError(response.data.message || "Sign up failed. Try again.");
-      // }
-      Keyboard.dismiss();
-      router.push("/otp");
-      reset();
+      console.log("Hii");
+      const response = await axios.post(`${backendURL}/api/user/signup`, data);
+      console.log(response);
+
+      if (response.data.success) {
+        router.push({
+          pathname: "/otp",
+          params: {
+            phoneNumber: data.phoneNumber,
+            name: data.name,
+            auth_type: "signup",
+          },
+        });
+        Keyboard.dismiss();
+        reset();
+      } else {
+        setBackendError(response.data.message || "Sign up failed. Try again.");
+      }
     } catch (err: any) {
       setBackendError(
         err?.response?.data?.message ||
           err?.message ||
           "Could not process request"
       );
+    } finally {
+      setLoading(false); // <--- Enable button again
     }
   };
 
@@ -103,7 +113,7 @@ const SignUp = () => {
                 <CustomInput
                   control={control}
                   name="name"
-                  placeholder="Username"
+                  placeholder="Name"
                   placeholderTextColor={colors.text}
                   keyboardType="default"
                 />
@@ -141,13 +151,13 @@ const SignUp = () => {
             {/* Improved SignIn Link */}
             <View style={styles.signInRow}>
               <Text style={[styles.switchText, { color: colors.text }]}>
-                Already have an account?
+                Already have an account?{" "}
               </Text>
               <Link
                 href="/signin"
-                style={[styles.switchText, styles.signInLink]}
+                style={{ fontWeight: "bold", color: colors.primary }}
               >
-                <Text style={{textDecorationStyle: "dashed"}}>Sign In</Text>
+                Sign In
               </Link>
             </View>
 
@@ -155,13 +165,15 @@ const SignUp = () => {
               Icon={MoveRight}
               iconProps={{ color: "#fff" }}
               onPress={handleSubmit(signUp)}
-              text={"Verify"}
+              disabled={loading} // <--- NEW
+              text={loading ? "Please wait..." : "Verify"} // <--- optional UX
               style={{
                 backgroundColor: colors.primary,
                 justifyContent: "center",
                 borderRadius: 32,
                 marginTop: 10,
                 minWidth: 140,
+                opacity: loading ? 0.6 : 1, // <--- visual feedback
               }}
             />
           </View>

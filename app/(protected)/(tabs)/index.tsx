@@ -3,110 +3,119 @@ import ToolCard from "@/components/ToolCard";
 import WeatherCard from "@/components/WeatherCard";
 import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
-import { AuthContext } from "@/utils/authContext";
+import { AuthContext, AuthProvider } from "@/utils/authContext";
 import { Redirect } from "expo-router";
 import { Bug, Calculator, CloudRain, Sun } from "lucide-react-native";
-import React, { useContext } from "react";
+import React, { useContext, useState } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 const HomeScreen = () => {
   const colorScheme = useColorScheme() ?? "dark";
   const colors = Colors[colorScheme] || Colors.light;
   const authState = useContext(AuthContext);
+  const [user, setUser] = useState(null)
 
+
+  function fetchUser(){
+    
+  }
   // console.log(authState.isLoggedIn);
   if (!authState.isLoggedIn) {
     console.log(authState.isLoggedIn);
-    // return <Redirect href="/signup" />;
+    return <Redirect href="/signup" />;
   }
 
   return (
     <>
-      <ScrollView
-        style={[
-          styles.container,
-          { paddingTop: 60, backgroundColor: colors.background },
-        ]}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{
-          paddingBottom: 48,
-          flexGrow: 1,
-        }}
-      >
-        {/* Header */}
-        <View style={styles.header}>
-          <Text style={[styles.title, { color: colors.text }]}>
-            Weather Forcast
-          </Text>
-        </View>
+      <AuthProvider>
+        <ScrollView
+          style={[
+            styles.container,
+            { paddingTop: 60, backgroundColor: colors.background },
+          ]}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{
+            paddingBottom: 48,
+            flexGrow: 1,
+          }}
+        >
+          {/* Header */}
+          <View style={styles.header}>
+            <Text style={[styles.title, { color: colors.text }]}>
+              Weather Forcast
+            </Text>
+          </View>
 
-        {/* Weather Cards */}
+          {/* Weather Cards */}
 
-        <View style={styles.weatherContainer}>
-          <WeatherCard
-            colors={["#e0f2fe", "#bae6fd"]}
-            Icon={Sun}
-            day="Today"
-            note="Perfect for watering!"
-            temperature={24}
-            weather="Sunny, 65% humidity"
-          />
-          <WeatherCard
-            colors={["#f3f4f6", "#f3f4f6"]}
-            Icon={CloudRain}
-            day="Tomorrow"
-            note="Skip Watering Today"
-            temperature={19}
-            weather="Light rain. 80% humidity"
-          />
-        </View>
-
-        {/* Monitor Section */}
-        <View style={[styles.monitorSection, { backgroundColor: colors.card }]}>
-          <MonitorCard />
-        </View>
-        <View style={styles.toolsSection}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>
-            Plant Care Tools
-          </Text>
-        </View>
-
-        {/* ToolsSection  */}
-        <View style={styles.toolsSection}>
-          <View style={styles.toolsGrid}>
-            <ToolCard
-              text="Crop Health"
-              description="Monitor your crop health."
-              Icon={Calculator}
-              iconColor={colors.primary}
-              iconSize={32}
+          <View style={styles.weatherContainer}>
+            <WeatherCard
+              colors={["#e0f2fe", "#bae6fd"]}
+              Icon={Sun}
+              day="Today"
+              note="Perfect for watering!"
+              temperature={24}
+              weather="Sunny, 65% humidity"
             />
-            <ToolCard
-              text="Pests & Diseases"
-              description="Identify and treat issues"
-              Icon={Bug}
-              iconColor={colors.error}
-              iconSize={32}
-              showBadge
-              count={3}
-              badgeText="Active"
+            <WeatherCard
+              colors={["#f3f4f6", "#f3f4f6"]}
+              Icon={CloudRain}
+              day="Tomorrow"
+              note="Skip Watering Today"
+              temperature={19}
+              weather="Light rain. 80% humidity"
             />
           </View>
-        </View>
-        <View style={styles.toolsSection}>
-          <View style={styles.toolsGrid}>
-            <ToolCard
-              text="Pests & Diseases"
-              description="Identify and treat issues"
-              Icon={Bug}
-              iconColor={colors.error}
-              iconSize={32}
-              showBadge
-              count={3}
-              badgeText="Active"
-            />
+
+          {/* Monitor Section */}
+          <View
+            style={[styles.monitorSection, { backgroundColor: colors.card }]}
+          >
+            <MonitorCard />
           </View>
-        </View>
-      </ScrollView>
+          <View style={styles.toolsSection}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>
+              Plant Care Tools
+            </Text>
+          </View>
+
+          {/* ToolsSection  */}
+          <View style={styles.toolsSection}>
+            <View style={styles.toolsGrid}>
+              <ToolCard
+                text="Crop Health"
+                description="Monitor your crop health."
+                Icon={Calculator}
+                iconColor={colors.primary}
+                iconSize={32}
+              />
+              <ToolCard
+                text="Pests & Diseases"
+                description="Identify and treat issues"
+                Icon={Bug}
+                iconColor={colors.error}
+                iconSize={32}
+                showBadge
+                count={3}
+                badgeText="Active"
+              />
+            </View>
+          </View>
+          <View style={styles.toolsSection}>
+            <View style={styles.toolsGrid}>
+              <ToolCard
+                text="Pests & Diseases"
+                description="Identify and treat issues"
+                Icon={Bug}
+                iconColor={colors.error}
+                iconSize={32}
+                showBadge
+                count={3}
+                badgeText="Active"
+              />
+            </View>
+          </View>
+        </ScrollView>
+      </AuthProvider>
     </>
   );
 };

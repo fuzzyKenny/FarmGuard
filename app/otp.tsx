@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useContext } from "react";
 import {
   StyleSheet,
   Text,
@@ -6,6 +6,7 @@ import {
   KeyboardAvoidingView,
   TextInput,
   Platform,
+  TouchableOpacity,
 } from "react-native";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { Colors } from "@/constants/Colors";
@@ -14,17 +15,28 @@ import CustomButton from "@/components/CustomButton";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { MoveRight } from "lucide-react-native";
 import axios from "axios";
+import { AuthContext } from "@/utils/authContext";
+import { saveCookie } from "@/utils/secureCookie";
 
 const OTP_LENGTH = 6;
+const COOLDOWN_TIME = 300; // 5 minutes in seconds
+const backendURL =
+  process.env.EXPO_BACKEND_URL || "https://ai-crop-health.onrender.com";
 
 const OTPScreen: React.FC = () => {
-  const { phoneNumber, name } = useLocalSearchParams<{ phoneNumber: string; name?: string }>();
+  const authState = useContext(AuthContext);
+  const { phoneNumber, auth_type } = useLocalSearchParams<{
+    phoneNumber: string;
+    auth_type: string;
+  }>();
   const colorScheme = useColorScheme() ?? "dark";
   const colors = Colors[colorScheme];
   const router = useRouter();
+
   const [otp, setOtp] = useState<string[]>(Array(OTP_LENGTH).fill(""));
   const inputRefs = useRef<(TextInput | null)[]>([]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [cooldown, setCooldown] = useState(0);
 
   useEffect(() => {
     inputRefs.current[0]?.focus();
@@ -37,12 +49,14 @@ const OTPScreen: React.FC = () => {
     }
   }, [errorMessage]);
 
-  // Show validation error if OTP is incomplete when verifying
   useEffect(() => {
-    if (otp.some((v) => v === "")) {
-      setErrorMessage(null);
+    if (cooldown > 0) {
+      const timer = setInterval(() => {
+        setCooldown((prev) => (prev > 0 ? prev - 1 : 0));
+      }, 1000);
+      return () => clearInterval(timer);
     }
-  }, [otp]);
+  }, [cooldown]);
 
   const handleOtpChange = (value: string, index: number) => {
     let filtered = value.replace(/[^0-9]/g, "");
@@ -79,40 +93,54 @@ const OTPScreen: React.FC = () => {
       return;
     }
     try {
-      // const response = await axios.post(
-      //   `${process.env.EXPO_PUBLIC_BACKEND_URL}/api/user/verify-otp`,
-      //   { phoneNumber, otp: otpCode, name }
-      // );
-      // if (response.data.success) {
-      //   router.replace("/(protected)/(tabs)");
-      // } else {
-      //   setErrorMessage(response.data.message || "OTP verification failed");
-      // }
-      router.replace("/(protected)/(tabs)");
+      const response = await axios.post(
+        `${backendURL}/api/user/${auth_type}/verify`,
+        { phoneNumber, otp: otpCode },
+        { withCredentials: true }
+      );
+
+      if (response.data.success) {
+        const token =
+          response.data.token || response.headers["set-cookie"]?.[0];
+
+        if (token) {
+          await saveCookie(token);
+        }
+
+        authState.logIn();
+        router.replace("/(protected)/(tabs)");
+      } else {
+        setErrorMessage(response.data.message || "OTP verification failed");
+      }
     } catch (err: any) {
       setErrorMessage(
         err?.response?.data?.message ||
-        err?.message ||
-        "Could not process request"
+          err?.message ||
+          "Could not process request"
       );
     }
   };
 
   const resendOTP = async () => {
+    if (cooldown > 0) return;
+
     try {
-      // await axios.post(
-      //   `${process.env.EXPO_PUBLIC_BACKEND_URL}/api/user/send-otp`, { phoneNumber }
-      // );
+      await axios.post(`${backendURL}/api/user/send-otp`, { phoneNumber });
       setOtp(Array(OTP_LENGTH).fill(""));
       inputRefs.current[0]?.focus();
       setErrorMessage("A new OTP has been sent to your phone number.");
+      setCooldown(COOLDOWN_TIME);
     } catch (err: any) {
       setErrorMessage(
-        err?.response?.data?.message ||
-        err?.message ||
-        "Unable to resend OTP"
+        err?.response?.data?.message || err?.message || "Unable to resend OTP"
       );
     }
+  };
+
+  const formatTime = (seconds: number) => {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m}:${s.toString().padStart(2, "0")}`;
   };
 
   return (
@@ -121,23 +149,31 @@ const OTPScreen: React.FC = () => {
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={[styles.container, { backgroundColor: colors.background }]}
       >
-        <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+        <SafeAreaView
+          style={[styles.container, { backgroundColor: colors.background }]}
+        >
           <View style={styles.centerContent}>
             <View style={{ alignItems: "center", marginBottom: 16 }}>
-              <Text style={[styles.heading, { color: colors.text }]}>Verify OTP</Text>
+              <Text style={[styles.heading, { color: colors.text }]}>
+                Verify OTP
+              </Text>
               <Text
                 style={[
                   styles.subtitle,
                   { color: colors.textSecondary ?? colors.text },
                 ]}
-              >Enter the 6-digit code sent to your phone.</Text>
+              >
+                Enter the 6-digit code sent to your phone.
+              </Text>
             </View>
             <View style={styles.otpOuter}>
               <View style={styles.otpContainer}>
                 {otp.map((digit, index) => (
                   <TextInput
                     key={index}
-                    ref={(ref) => { inputRefs.current[index] = ref; }}
+                    ref={(ref) => {
+                      inputRefs.current[index] = ref;
+                    }}
                     style={[
                       styles.otpInput,
                       {
@@ -148,7 +184,9 @@ const OTPScreen: React.FC = () => {
                     ]}
                     value={digit}
                     onChangeText={(value) => handleOtpChange(value, index)}
-                    onKeyPress={({ nativeEvent }) => handleKeyPress(nativeEvent.key, index)}
+                    onKeyPress={({ nativeEvent }) =>
+                      handleKeyPress(nativeEvent.key, index)
+                    }
                     keyboardType="number-pad"
                     inputMode="numeric"
                     maxLength={1}
@@ -177,12 +215,26 @@ const OTPScreen: React.FC = () => {
               onPress={verifyOTP}
               text="Verify OTP"
             />
-            <Text
-              style={[styles.resendText, { color: colors.primary, marginTop: 24 }]}
+
+            <TouchableOpacity
               onPress={resendOTP}
+              disabled={cooldown > 0}
+              style={{ marginTop: 24 }}
             >
-              Didn't receive code? Resend OTP
-            </Text>
+              <Text
+                style={[
+                  styles.resendText,
+                  {
+                    color: cooldown > 0 ? colors.textSecondary : colors.primary,
+                    opacity: cooldown > 0 ? 0.6 : 1,
+                  },
+                ]}
+              >
+                {cooldown > 0
+                  ? `Resend available in ${formatTime(cooldown)}`
+                  : "Didn't receive code? Resend OTP"}
+              </Text>
+            </TouchableOpacity>
           </View>
         </SafeAreaView>
       </KeyboardAvoidingView>
@@ -248,4 +300,3 @@ const styles = StyleSheet.create({
     textDecorationLine: "underline",
   },
 });
-

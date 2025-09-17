@@ -19,37 +19,34 @@ import { Link, useRouter } from "expo-router";
 import { MoveRight } from "lucide-react-native";
 import axios from "axios";
 
+// Only phoneNumber field for sign-in
 const schema = z.object({
-  name: z.string().min(3, "Username must be at least 3 characters."),
   phoneNumber: z
     .string()
     .regex(/^[0-9]{10}$/, "Enter a valid 10-digit phone number"),
 });
-type AuthSchema = z.infer<typeof schema>;
-const backendURL = process.env.EXPO_PUBLIC_BACKEND_URL;
+type SignInSchema = z.infer<typeof schema>;
+const backendURL = "https://ai-crop-health.onrender.com";
 
-const SignUp = () => {
+const SignIn = () => {
   const colorScheme = useColorScheme() ?? "dark";
   const colors = Colors[colorScheme];
   const router = useRouter();
 
-  // error state for backend or validation
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false); // <-- new
 
   const {
     control,
     handleSubmit,
     formState: { errors },
     reset,
-  } = useForm<AuthSchema>({
+  } = useForm<SignInSchema>({
     resolver: zodResolver(schema),
   });
 
-  // Pick one error to show (validation > backend)
-  const firstError =
-    errors.name?.message || errors.phoneNumber?.message || errorMessage || null;
+  const firstError = errors.phoneNumber?.message || errorMessage || null;
 
-  // Auto-dismiss backend/validation error after 2.5s
   useEffect(() => {
     if (firstError) {
       const timer = setTimeout(() => setErrorMessage(null), 2500);
@@ -57,41 +54,40 @@ const SignUp = () => {
     }
   }, [firstError]);
 
-  // If a validation error occurs, show it (works for re-renders)
   useEffect(() => {
     if (!errorMessage) {
-      const validationError =
-        errors.name?.message || errors.phoneNumber?.message || null;
+      const validationError = errors.phoneNumber?.message || null;
       if (validationError) {
         setErrorMessage(validationError);
       }
     }
-  }, [errors.name?.message, errors.phoneNumber?.message, errorMessage]);
+  }, [errors.phoneNumber?.message, errorMessage]);
 
-  const signUp = async (data: AuthSchema) => {
+  const signIn = async (data: SignInSchema) => {
+    if (loading) return; // <-- prevent double-tap
+    setLoading(true);
+
     setErrorMessage(null);
     try {
-      // Uncomment for backend integration...
-      // const response = await axios.post(`${backendURL}/api/user/signup`, data);
-      // if (response.data.success) {
-      //   router.push({
-      //     pathname: "/otp",
-      //     params: { phoneNumber: data.phoneNumber, name: data.name },
-      //   });
-      //   Keyboard.dismiss();
-      //   reset();
-      // } else {
-      //   setErrorMessage(response.data.message || "Sign up failed. Try again.");
-      // }
-      // Simulate success for now:
-      router.push("/otp");
-      reset();
+      const response = await axios.post(`${backendURL}/api/user/login`, data);
+      if (response.data.success) {
+        router.push({
+          pathname: "/otp",
+          params: { phoneNumber: data.phoneNumber, auth_type: "login" },
+        });
+        Keyboard.dismiss();
+        reset();
+      } else {
+        setErrorMessage(response.data.message || "Login failed. Try again.");
+      }
     } catch (err: any) {
       setErrorMessage(
         err?.response?.data?.message ||
           err?.message ||
           "Could not process request"
       );
+    } finally {
+      setLoading(false); // <-- re-enable button
     }
   };
 
@@ -106,24 +102,9 @@ const SignUp = () => {
         >
           <View style={styles.centerWrapper}>
             <Text style={[styles.heading, { color: colors.primary }]}>
-              Sign Up
+              Sign In
             </Text>
-
             <View style={styles.formGroup}>
-              <View
-                style={[
-                  styles.inputContainer,
-                  { backgroundColor: colors.border },
-                ]}
-              >
-                <CustomInput
-                  control={control}
-                  name="name"
-                  placeholder="Username"
-                  placeholderTextColor={colors.text}
-                  keyboardType="default"
-                />
-              </View>
               <View
                 style={[
                   styles.inputContainer,
@@ -140,35 +121,34 @@ const SignUp = () => {
                 />
               </View>
             </View>
-
             {firstError && <Text style={styles.subtleError}>{firstError}</Text>}
-
             <Text
               style={[
                 styles.switchText,
                 { color: colors.text, marginVertical: 16 },
               ]}
             >
-              Already have an account?{" "}
+              Don't have an account?{" "}
               <Link
-                href="/signin"
+                href="/signup"
                 style={{ fontWeight: "bold", color: colors.primary }}
               >
-                Sign In
+                Sign Up
               </Link>
             </Text>
-
             <CustomButton
               Icon={MoveRight}
               iconProps={{ color: "#fff" }}
-              onPress={handleSubmit(signUp)}
-              text={"Verify"}
+              onPress={handleSubmit(signIn)}
+              text={loading ? "Verifying..." : "Verify"} // <-- loading text
+              disabled={loading} // <-- disable while loading
               style={{
                 backgroundColor: colors.primary,
                 justifyContent: "center",
                 borderRadius: 32,
                 marginTop: 10,
                 minWidth: 140,
+                opacity: loading ? 0.7 : 1, // <-- subtle visual feedback
               }}
             />
           </View>
@@ -178,7 +158,7 @@ const SignUp = () => {
   );
 };
 
-export default SignUp;
+export default SignIn;
 
 const styles = StyleSheet.create({
   container: {

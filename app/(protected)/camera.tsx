@@ -6,13 +6,13 @@ import {
   FlashMode,
 } from "expo-camera";
 import React, { useRef, useState, useEffect } from "react";
-import { Camera as Cam, SwitchCamera, Zap } from "lucide-react-native";
+import { Camera as Cam, SwitchCamera, Paperclip } from "lucide-react-native";
 import * as MediaLibrary from "expo-media-library";
+import pickImage from "./imagePicker";
 
 const Camera = () => {
   const [facing, setFacing] = useState<CameraType>("front");
   const [permission, requestPermission] = useCameraPermissions();
-  const [flash, setFlash] = useState<FlashMode>("off");
   // const [mediaPermission, requestMediaPermission] = MediaLibrary.usePermissions(
   //   { granularPermissions: ["photo", "video"] }
   // );
@@ -99,29 +99,28 @@ const Camera = () => {
           <SwitchCamera size={28} color="#222" />
         </Pressable>
       </View>
-      {/* <View style={styles.buttonShutterContainer}>
+      <View style={styles.buttonShutterContainer}>
         <Pressable
-         style={({pressed}) => [
-          styles.shutterButton,
-          pressed && { opacity: 0.6},
-        ]} 
-        onPress={takePhoto}
+          style={({ pressed }) => [
+            styles.shutterButton,
+            pressed ? { opacity: 0.6 } : null,
+          ]}
+          onPress={takePhoto}
         >
           <Cam size={40} color="#fff" />
         </Pressable>
-      </View> */}
-      <View style={styles.buttonShutterContainer}>
-  <Pressable
-    style={({ pressed }) => [
-      styles.shutterButton,
-      pressed ? { opacity: 0.6 } : null
-    ]}
-    onPress={takePhoto}
-  >
-    <Cam size={40} color="#fff" />
-  </Pressable>
-</View>
-
+      </View>
+      <View style={[styles.buttonImagePicker]}>
+        <Pressable
+          style={({ pressed }) => [
+            styles.iconButton,
+            pressed ? { opacity: 0.6 } : null,
+          ]}
+          onPress={pickImage}
+        >
+          <Paperclip size={28} color="#000" />
+        </Pressable>
+      </View>
     </View>
   );
 };
@@ -173,7 +172,7 @@ const styles = StyleSheet.create({
   },
   buttonFlipContainer: {
     position: "absolute",
-    bottom: 56,
+    bottom: 50,
     left: 30,
   },
 
@@ -183,7 +182,11 @@ const styles = StyleSheet.create({
     left: "50%",
     transform: [{ translateX: -36 }],
   },
-
+  buttonImagePicker: {
+    position: "absolute",
+    bottom: 50,
+    right: 30,
+  },
   iconButton: {
     backgroundColor: "#fff",
     borderRadius: 36,
