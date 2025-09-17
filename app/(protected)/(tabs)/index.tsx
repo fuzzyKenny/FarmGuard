@@ -1,159 +1,193 @@
 import MonitorCard from "@/components/MonitorCard";
-import ToolCard from "@/components/ToolCard";
 import WeatherCard from "@/components/WeatherCard";
 import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { AuthProvider } from "@/utils/authContext";
 import axios from "axios";
-import { Redirect } from "expo-router";
-import { Bug, Calculator, CloudRain, Sun } from "lucide-react-native";
-import React, { useEffect, useState } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { CloudRain, Sun } from "lucide-react-native";
+import React, { useCallback, useEffect, useState } from "react";
+import {
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+  ActivityIndicator,
+} from "react-native";
+import { useLocationPermission } from "@/hooks/useLocationPermission";
+
 const HomeScreen = () => {
   const colorScheme = useColorScheme() ?? "dark";
   const colors = Colors[colorScheme] || Colors.light;
   const backendURL = "https://ai-crop-health.onrender.com";
 
+  const [weatherLoading, setWeatherLoading] = useState(true);
   const [weatherData, setWeatherData] = useState({
+    loaded: false,
     current: {
-      temperature_2m: 0,
+      temperature_2m: null as number | null,
       weather_description: "",
-      relative_humidity_2m: 0
+      relative_humidity_2m: null as number | null,
     },
     tomorrow: {
-      temperature_2m: 0,
+      temperature_max: null as number | null,
+      temperature_min: null as number | null,
       weather_description: "",
-      relative_humidity_2m: 0
-    }
+      relativeHumidity: null as number | null,
+    },
   });
 
-  async function getWeatherData() {
-    const response = await axios.get(`${backendURL}/api/weather/forecast`);
-    if (response.data.success) {
-      setWeatherData(response.data.body);
-    } else {
-      // console.error(response);
-    }
-  }
+  const { location, errorMsg } = useLocationPermission();
+
+  const getWeatherData = useCallback(
+    async (lat: number, long: number) => {
+      setWeatherLoading(true);
+      try {
+        const response = await axios.post(
+          `${backendURL}/api/weather/forecast`,
+          {
+            lat,
+            long,
+          }
+        );
+
+        // DEBUG log
+        console.log("Weather API response:", response.data);
+
+        if (response.data?.success && response.data.body) {
+          setWeatherData({
+            loaded: true,
+            current: {
+              temperature_2m:
+                response.data.body.current?.temperature_2m ?? null,
+              weather_description:
+                response.data.body.current?.weather_description ?? "",
+              relative_humidity_2m:
+                response.data.body.current?.relative_humidity_2m ?? null,
+            },
+            tomorrow: {
+              temperature_max:
+                response.data.body.tomorrow?.temperature_max ?? null,
+              temperature_min:
+                response.data.body.tomorrow?.temperature_min ?? null,
+              weather_description:
+                response.data.body.tomorrow?.weather_description ?? "",
+              relativeHumidity:
+                response.data.body.tomorrow?.relative_humidity_2m ?? null,
+            },
+          });
+        }
+      } catch (e) {
+        console.error("Weather API error:", e);
+      } finally {
+        setWeatherLoading(false);
+      }
+    },
+    [backendURL]
+  );
 
   useEffect(() => {
-    getWeatherData();
-  }, []);
+    if (location) {
+      getWeatherData(location.coords.latitude, location.coords.longitude);
+    }
+  }, [location, getWeatherData]);
 
-  // console.log(authState.isLoggedIn);
-  // if (!authState.isLoggedIn) {
-  //   return <Redirect href="/signup" />;
-  // }
+  const avgTemperatureTomorrow =
+    typeof weatherData.tomorrow.temperature_max === "number" &&
+    typeof weatherData.tomorrow.temperature_min === "number"
+      ? (weatherData.tomorrow.temperature_max +
+          weatherData.tomorrow.temperature_min) /
+        2
+      : 0;
+
+  const formatHumidity = (val: number | null | undefined) =>
+    typeof val === "number" ? `${Math.floor(val)}%` : "";
 
   return (
-    <>
-      <AuthProvider>
-        <ScrollView
-          style={[
-            styles.container,
-            { paddingTop: 60, backgroundColor: colors.background },
-          ]}
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{
-            paddingBottom: 48,
-            flexGrow: 1,
-          }}
-        >
-          {/* Header */}
-          <View style={styles.header}>
-            <Text style={[styles.title, { color: colors.text }]}>
-              CropRakshak
-            </Text>
-          </View>
-          {/* Monitor Section */}
-          <View
-            style={[styles.monitorSection, { backgroundColor: colors.card }]}
-          >
-            <MonitorCard />
-          </View>
-          <View style={styles.toolsSection}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>
-              Weather Forcast
-            </Text>
-          </View>
-          {/* Weather Cards */}
+    <AuthProvider>
+      <ScrollView
+        style={[
+          styles.container,
+          { paddingTop: 60, backgroundColor: colors.background },
+        ]}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{
+          paddingBottom: 48,
+          flexGrow: 1,
+        }}
+      >
+        {/* Header */}
+        <View style={styles.header}>
+          <Text style={[styles.title, { color: colors.text }]}>
+            CropRakshak
+          </Text>
+        </View>
+        {/* Monitor Section */}
+        <View style={[styles.monitorSection, { backgroundColor: colors.card }]}>
+          <MonitorCard />
+        </View>
+        <View style={styles.toolsSection}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>
+            Weather Forecast
+          </Text>
+        </View>
 
-          <View style={styles.weatherContainer}>
+        {errorMsg && (
+          <Text
+            style={{ color: "red", textAlign: "center", marginVertical: 12 }}
+          >
+            {errorMsg}
+          </Text>
+        )}
+
+        {/* Weather Card: Today */}
+        <View style={styles.weatherContainer}>
+          {weatherLoading ? (
+            <ActivityIndicator
+              size="large"
+              color="#0369a1"
+              style={{ flex: 1, paddingVertical: 32 }}
+            />
+          ) : (
             <WeatherCard
               colors={["#e0f2fe", "#bae6fd"]}
               Icon={Sun}
               day="Today"
-              note="Perfect for watering!"
-              temperature={weatherData.current.temperature_2m}
+              temperature={`${weatherData.current.temperature_2m ?? 0}°C`}
               weather={{
                 description: weatherData.current.weather_description,
-                relativeHumidity: weatherData.current.relative_humidity_2m,
+                relativeHumidity: formatHumidity(
+                  weatherData.current.relative_humidity_2m
+                ),
               }}
             />
-            {/* <WeatherCard
-              colors={["#f3f4f6", "#f3f4f6"]}
-              Icon={CloudRain}
-              day="Tomorrow"
-              note="Skip Watering Today"
-              temperature={19}
-              weather="Light rain. 80% humidity"
-            /> */}
+          )}
+        </View>
 
-            {}
-          </View>
-          <View style={styles.weatherContainer}>
+        {/* Weather Card: Tomorrow */}
+        <View style={styles.weatherContainer}>
+          {weatherLoading ? (
+            <ActivityIndicator
+              size="large"
+              color="#0369a1"
+              style={{ flex: 1, paddingVertical: 32 }}
+            />
+          ) : (
             <WeatherCard
               colors={["#f3f4f6", "#f3f4f6"]}
               Icon={CloudRain}
               day="Tomorrow"
-              note="Skip Watering Today"
-              temperature={weatherData.tomorrow.temperature_2m}
+              temperature={`${avgTemperatureTomorrow ?? 0}°C`}
               weather={{
                 description: weatherData.tomorrow.weather_description,
-                relativeHumidity: weatherData.tomorrow.relative_humidity_2m,
+                relativeHumidity: formatHumidity(
+                  weatherData.tomorrow.relativeHumidity
+                ),
               }}
             />
-          </View>
-
-          {/* ToolsSection  */}
-          {/* <View style={styles.toolsSection}>
-            <View style={styles.toolsGrid}>
-              <ToolCard
-                text="Crop Health"
-                description="Monitor your crop health."
-                Icon={Calculator}
-                iconColor={colors.primary}
-                iconSize={32}
-              />
-              <ToolCard
-                text="Pests & Diseases"
-                description="Identify and treat issues"
-                Icon={Bug}
-                iconColor={colors.error}
-                iconSize={32}
-                showBadge
-                count={3}
-                badgeText="Active"
-              />
-            </View>
-          </View> */}
-          {/* <View style={styles.toolsSection}>
-            <View style={styles.toolsGrid}>
-              <ToolCard
-                text="Pests & Diseases"
-                description="Identify and treat issues"
-                Icon={Bug}
-                iconColor={colors.error}
-                iconSize={32}
-                showBadge
-                count={3}
-                badgeText="Active"
-              />
-            </View>
-          </View> */}
-        </ScrollView>
-      </AuthProvider>
-    </>
+          )}
+        </View>
+      </ScrollView>
+    </AuthProvider>
   );
 };
 

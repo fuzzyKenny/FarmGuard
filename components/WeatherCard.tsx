@@ -1,38 +1,48 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { LinearGradient } from "expo-linear-gradient";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View, ActivityIndicator } from "react-native";
 import type { FC } from "react";
 import type { SvgProps } from "react-native-svg";
-import { LinearGradientProps } from "expo-linear-gradient";
+import type { LinearGradientProps } from "expo-linear-gradient";
 
-// The Icon prop should be a function component (e.g., Sun, Cloudy, CloudRain)
 type WeatherCardProps = {
   day: string;
-  temperature: number;
-  weather: { description: string; relativeHumidity: number };
-  note: string;
+  temperature: string;
+  weather: { description: string; relativeHumidity?: string };
   Icon: FC<SvgProps>;
+  isLoading?: boolean;
 } & LinearGradientProps;
 
 const WeatherCard: FC<WeatherCardProps> = ({
   day,
   temperature,
   weather,
-  note,
   Icon,
+  isLoading = false,
   ...linearGradientProps
 }) => {
+  if (isLoading) {
+    return (
+      <LinearGradient {...linearGradientProps} style={styles.weatherCard}>
+        <View
+          style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+        >
+          <ActivityIndicator size="large" color="#1f2937" />
+        </View>
+      </LinearGradient>
+    );
+  }
+
   return (
     <LinearGradient {...linearGradientProps} style={styles.weatherCard}>
       <View style={styles.dayContainer}>
         <Text style={styles.weatherDay}>{day}</Text>
         <Icon width={60} height={60} />
       </View>
-      <Text style={styles.temperature}>{temperature}°C</Text>
-      <Text
-        style={styles.weatherDesc}
-      >{`${weather.description}, ${weather.relativeHumidity} %`}</Text>
-      <Text style={styles.weatherNote}>{note}</Text>
+      <Text style={styles.temperature}>{temperature}</Text>
+      <Text style={[styles.weatherDesc, styles.weatherNote]}>{`${
+        weather.description
+      } ${weather.relativeHumidity ?? ""}`}</Text>
     </LinearGradient>
   );
 };
