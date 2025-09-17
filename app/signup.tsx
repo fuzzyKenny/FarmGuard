@@ -60,10 +60,10 @@ const SignUp = () => {
     setBackendError(null);
     try {
       // console.log("Hii");
-      const response = await axios.post(`${backendURL}/api/user/signup`, data);
+      // const response = await axios.post(`${backendURL}/api/user/signup`, data);
       // console.log(response);
 
-      if (response.data.success) {
+      if (false /* response?.data?.success */) {
         router.push({
           pathname: "/otp",
           params: {
@@ -75,7 +75,7 @@ const SignUp = () => {
         Keyboard.dismiss();
         reset();
       } else {
-        setBackendError(response.data.message || "Sign up failed. Try again.");
+        setBackendError("Sign up failed. Try again.");
       }
     } catch (err: any) {
       setBackendError(

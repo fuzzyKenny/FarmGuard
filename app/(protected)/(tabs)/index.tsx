@@ -3,27 +3,27 @@ import ToolCard from "@/components/ToolCard";
 import WeatherCard from "@/components/WeatherCard";
 import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
-import { AuthContext, AuthProvider } from "@/utils/authContext";
+import { AuthProvider } from "@/utils/authContext";
 import axios from "axios";
 import { Redirect } from "expo-router";
 import { Bug, Calculator, CloudRain, Sun } from "lucide-react-native";
-import React, { useContext, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 const HomeScreen = () => {
   const colorScheme = useColorScheme() ?? "dark";
   const colors = Colors[colorScheme] || Colors.light;
-  const authState = useContext(AuthContext);
+  // const authState = useContext(AuthContext);
   const backendURL = "https://ai-crop-health.onrender.com";
 
   const [weatherData, setWeatherData] = useState([]);
 
   async function getWeatherData() {
-    const response = await axios.get(`${backendURL}/api/weather/forecast`);
-    if (response.data.success) {
-      setWeatherData(response.data.body);
-    } else {
-      console.error(response);
-    }
+    // const response = await axios.get(`${backendURL}/api/weather/forecast`);
+    // if (response.data.success) {
+    //   setWeatherData(response.data.body);
+    // } else {
+    //   // console.error(response);
+    // }
   }
 
   useEffect(() => {

@@ -5,13 +5,13 @@ import { Image, StyleSheet, View } from "react-native";
 const Avatar = () => {
   return (
     <View style={[styles.avatar]}>
-      {/* <Image
+      <Image
         style={[styles.image]}
         source={{
-          uri: "https://i.pinimg.com/736x/e2/d1/47/e2d147c6d09cd98462a2d887b2a6c39e.jpg",
+          uri: "https://cdn.discordapp.com/attachments/1369429967162839063/1417949820131213372/farmer-pfp_1.jpg?ex=68cc582d&is=68cb06ad&hm=751c669209c9fc89c29a97c6a15fd868b315ee55c1fda368a8141686b1a4b3a7&",
         }}
-      /> */}
-      <User2 size={80} color="#ffffff"/>
+      />
+      {/* <User2 size={80} color="#ffffff"/> */}
     </View>
   );
 };

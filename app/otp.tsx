@@ -93,15 +93,14 @@ const OTPScreen: React.FC = () => {
       return;
     }
     try {
-      const response = await axios.post(
-        `${backendURL}/api/user/${auth_type}/verify`,
-        { phoneNumber, otp: otpCode },
-        { withCredentials: true }
-      );
+      // const response = await axios.post(
+      //   `${backendURL}/api/user/${auth_type}/verify`,
+      //   { phoneNumber, otp: otpCode },
+      //   { withCredentials: true }
+      // );
 
-      if (response.data.success) {
-        const token =
-          response.data.token || response.headers["set-cookie"]?.[0];
+      if (false /* response?.data?.success */) {
+        const token = ""; /* response?.data?.token || response?.headers["set-cookie"]?.[0] */
 
         // if (token) {
         //   await saveCookie(token);
@@ -113,13 +112,13 @@ const OTPScreen: React.FC = () => {
           const saved = await getCookie();
           // console.log("Saved Cookie:", saved);
         } catch (e) {
-          console.log("Error saving cookie:", e);
+          // console.log("Error saving cookie:", e);
         }
 
         authState.logIn();
         router.replace("/(protected)/(tabs)");
       } else {
-        setErrorMessage(response.data.message || "OTP verification failed");
+        setErrorMessage("OTP verification failed");
       }
     } catch (err: any) {
       setErrorMessage(
@@ -134,7 +133,7 @@ const OTPScreen: React.FC = () => {
     if (cooldown > 0) return;
 
     try {
-      await axios.post(`${backendURL}/api/user/send-otp`, { phoneNumber });
+      // await axios.post(`${backendURL}/api/user/send-otp`, { phoneNumber });
       setOtp(Array(OTP_LENGTH).fill(""));
       inputRefs.current[0]?.focus();
       setErrorMessage("A new OTP has been sent to your phone number.");

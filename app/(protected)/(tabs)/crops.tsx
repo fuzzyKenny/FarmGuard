@@ -33,12 +33,12 @@ export default function CropsScreen() {
   const colors = Colors[colorScheme];
 
   async function getCropData() {
-    const response = await axios.get(`${backendURL}/api/crops/`);
-    if (response.data.success) {
-      setCropData(response.data.body);
-    } else {
-      console.error(response);
-    }
+    // const response = await axios.get(`${backendURL}/api/crops/`);
+    // if (response.data.success) {
+    //   setCropData(response.data.body);
+    // } else {
+    //   // console.error(response);
+    // }
   }
 
   useEffect(() => {

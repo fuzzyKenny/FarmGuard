@@ -69,8 +69,8 @@ const SignIn = () => {
 
     setErrorMessage(null);
     try {
-      const response = await axios.post(`${backendURL}/api/user/login`, data);
-      if (response.data.success) {
+      // const response = await axios.post(`${backendURL}/api/user/login`, data);
+      if (false /* response?.data?.success */) {
         router.push({
           pathname: "/otp",
           params: { phoneNumber: data.phoneNumber, auth_type: "login" },
@@ -78,7 +78,7 @@ const SignIn = () => {
         Keyboard.dismiss();
         reset();
       } else {
-        setErrorMessage(response.data.message || "Login failed. Try again.");
+        setErrorMessage("Login failed. Try again.");
       }
     } catch (err: any) {
       setErrorMessage(

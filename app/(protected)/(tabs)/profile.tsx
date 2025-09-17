@@ -15,12 +15,12 @@ export default function ProfileScreen() {
   const [user, setUser] = useState({ name: "" });
 
   async function fetchUser() {
-    const response = await axios.get(`${backendURL}/api/user/`);
-    if (response.data.success) {
-      setUser(response.data.body);
-    } else {
-      console.log("Error while fetching user.:", response);
-    }
+    // const response = await axios.get(`${backendURL}/api/user/`);
+    // if (response.data.success) {
+    //   setUser(response.data.body);
+    // } else {
+    //   // console.log("Error while fetching user.:", response);
+    // }
   }
 
   useEffect(() => {
@@ -44,7 +44,7 @@ export default function ProfileScreen() {
     >
       <View style={styles.header}>
         <Avatar />
-        <Text style={[styles.name, { color: colors.text }]}>{user.name}</Text>
+        <Text style={[styles.name, { color: colors.text }]}>Ramesh Verma</Text>
       </View>
 
       <View style={[styles.section]}>
