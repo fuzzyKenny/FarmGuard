@@ -1,7 +1,7 @@
 import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import axios from "axios";
-import { Sprout, Trash2 } from "lucide-react-native";
+import { Badge, Sprout, Trash2 } from "lucide-react-native";
 import React, { useState, useCallback } from "react";
 import { useFocusEffect } from "expo-router";
 import {
@@ -40,6 +40,21 @@ function CropTile({
             {crop.name}
           </Text>
           <Text style={styles.cropStatus}>{crop.variety}</Text>
+          <View
+            style={{
+              backgroundColor: colors.error,
+              position: "absolute",
+              borderRadius: 10,
+              bottom: -35,
+              left: -5,
+            }}
+          >
+            <Text
+              style={[styles.healthStatus, { color: colors.text, padding: 5 }]}
+            >
+              Unhealthy: Early Blight
+            </Text>
+          </View>
         </View>
         <Pressable
           accessibilityRole="button"
@@ -263,7 +278,7 @@ const styles = StyleSheet.create({
   cropCard: {
     marginHorizontal: 16,
     borderRadius: 16,
-    padding: 16,
+    padding: 30,
     marginBottom: 16,
   },
   cropHeader: {
@@ -291,5 +306,8 @@ const styles = StyleSheet.create({
   emptyText: {
     textAlign: "center",
     marginTop: 8,
+  },
+  healthStatus: {
+    fontSize: 14,
   },
 });

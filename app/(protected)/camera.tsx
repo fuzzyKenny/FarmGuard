@@ -1,39 +1,24 @@
 import { StyleSheet, Text, View, Pressable, Alert } from "react-native";
-import {
-  CameraView,
-  CameraType,
-  useCameraPermissions,
-  FlashMode,
-} from "expo-camera";
+import { CameraView, CameraType, useCameraPermissions } from "expo-camera";
 import React, { useRef, useState, useEffect } from "react";
 import { Camera as Cam, SwitchCamera, Paperclip } from "lucide-react-native";
 import * as MediaLibrary from "expo-media-library";
-import pickImage from "./imagePicker";
+import { useImagePicker } from "@/hooks/useImagePicker";
+import { useRouter } from "expo-router";
 
 const Camera = () => {
+  const { pickImage } = useImagePicker();
   const [facing, setFacing] = useState<CameraType>("front");
   const [permission, requestPermission] = useCameraPermissions();
-  // const [mediaPermission, requestMediaPermission] = MediaLibrary.usePermissions(
-  //   { granularPermissions: ["photo", "video"] }
-  // );
-
   const camera = useRef<CameraView>(null);
+  const router = useRouter();
 
   useEffect(() => {
-    if (permission && !permission.granted) {
-      requestPermission();
-    }
+    if (permission && !permission.granted) requestPermission();
   }, [permission]);
 
-  // if (!permission || !mediaPermission) {
-  //   return <View style={styles.loadingScreen} />;
-  // }
-  if (!permission) {
-    return <View style={styles.loadingScreen} />;
-  }
-
-  if (!permission.granted) {
-    // Don't show a button, just instruct the user to accept the system prompt
+  if (!permission) return <View style={styles.loadingScreen} />;
+  if (!permission.granted)
     return (
       <View style={styles.permissionScreen}>
         <Text style={styles.permissionText}>
@@ -41,42 +26,35 @@ const Camera = () => {
         </Text>
       </View>
     );
-  }
 
-  // if (!mediaPermission.granted) {
-  //   return (
-  //     <View style={styles.permissionScreen}>
-  //       <Text style={styles.permissionText}>
-  //         We need media library permissions to save photos
-  //       </Text>
-  //       <Pressable
-  //         style={styles.permissionButton}
-  //         onPress={requestMediaPermission}
-  //       >
-  //         <Text style={styles.permissionButtonText}>
-  //           Grant Media Library Permission
-  //         </Text>
-  //       </Pressable>
-  //     </View>
-  //   );
-  // }
-
-  function toggleCameraFacing() {
+  const toggleCameraFacing = () =>
     setFacing((current) => (current === "front" ? "back" : "front"));
-  }
 
   async function takePhoto() {
     try {
       const photo = await camera.current?.takePictureAsync();
       if (photo?.uri) {
-        const asset = await MediaLibrary.createAssetAsync(photo.uri);
-        // console.log("Saved Asset", asset);
+        await MediaLibrary.createAssetAsync(photo.uri);
+        router.push({
+          pathname: "/(protected)/imageScreen",
+          params: { uri: photo.uri },
+        });
       } else {
         Alert.alert("Error", "Failed to take photo.");
       }
     } catch (e) {
       Alert.alert("Error", "Could not save photo.");
       console.error("Photo error:", e);
+    }
+  }
+
+  async function handlePickImage() {
+    const uri = await pickImage(); // Returns URI or null
+    if (uri) {
+      router.push({
+        pathname: "/(protected)/imageScreen",
+        params: { uri },
+      });
     }
   }
 
@@ -103,20 +81,20 @@ const Camera = () => {
         <Pressable
           style={({ pressed }) => [
             styles.shutterButton,
-            pressed ? { opacity: 0.6 } : null,
+            pressed && { opacity: 0.6 },
           ]}
           onPress={takePhoto}
         >
           <Cam size={40} color="#fff" />
         </Pressable>
       </View>
-      <View style={[styles.buttonImagePicker]}>
+      <View style={styles.buttonImagePicker}>
         <Pressable
           style={({ pressed }) => [
             styles.iconButton,
             pressed ? { opacity: 0.6 } : null,
           ]}
-          onPress={pickImage}
+          onPress={handlePickImage}
         >
           <Paperclip size={28} color="#000" />
         </Pressable>
@@ -128,22 +106,15 @@ const Camera = () => {
 export default Camera;
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#15181c",
-    justifyContent: "center",
-    alignItems: "center",
-  },
+  container: { flex: 1, backgroundColor: "#15181c" },
   camera: {
     height: "70%",
-    alignSelf: "stretch",
+    width: "100%",
     borderRadius: 24,
     overflow: "hidden",
+    marginTop: 150,
   },
-  loadingScreen: {
-    flex: 1,
-    backgroundColor: "#15181c",
-  },
+  loadingScreen: { flex: 1, backgroundColor: "#15181c" },
   permissionScreen: {
     flex: 1,
     justifyContent: "center",
@@ -157,36 +128,14 @@ const styles = StyleSheet.create({
     marginBottom: 14,
     textAlign: "center",
   },
-  permissionButton: {
-    backgroundColor: "#2563eb",
-    borderRadius: 999,
-    paddingVertical: 12,
-    paddingHorizontal: 32,
-    elevation: 5,
-    marginTop: 8,
-  },
-  permissionButtonText: {
-    color: "#fff",
-    fontWeight: "bold",
-    fontSize: 16,
-  },
-  buttonFlipContainer: {
-    position: "absolute",
-    bottom: 50,
-    left: 30,
-  },
-
+  buttonFlipContainer: { position: "absolute", bottom: 50, left: 30 },
   buttonShutterContainer: {
     position: "absolute",
     bottom: 42,
     left: "50%",
     transform: [{ translateX: -36 }],
   },
-  buttonImagePicker: {
-    position: "absolute",
-    bottom: 50,
-    right: 30,
-  },
+  buttonImagePicker: { position: "absolute", bottom: 50, right: 30 },
   iconButton: {
     backgroundColor: "#fff",
     borderRadius: 36,
@@ -214,25 +163,5 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.16,
     shadowRadius: 20,
     shadowOffset: { width: 0, height: 6 },
-  },
-  focusRingOuter: {
-    position: "absolute",
-    top: "45%",
-    left: "40%",
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    borderWidth: 2,
-    borderColor: "rgba(255,255,255,0.22)",
-    justifyContent: "center",
-    alignItems: "center",
-    zIndex: 4,
-  },
-  focusRingInner: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    borderWidth: 2,
-    borderColor: "rgba(255,255,255,0.38)",
   },
 });

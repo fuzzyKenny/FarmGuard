@@ -5,24 +5,22 @@ import { useColorScheme } from "@/hooks/useColorScheme";
 import { AuthProvider } from "@/utils/authContext";
 import axios from "axios";
 import { CloudRain, Sun } from "lucide-react-native";
-import React, { useCallback, useEffect, useState } from "react";
-import {
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-  ActivityIndicator,
-} from "react-native";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { useLocationPermission } from "@/hooks/useLocationPermission";
+
+const TEN_MINUTES_MS = 10 * 60 * 1000;
+
+const DEFAULT_TEMPERATURE = 27;
+const DEFAULT_DESCRIPTION = "Partly cloudy";
+const DEFAULT_HUMIDITY = "50%";
 
 const HomeScreen = () => {
   const colorScheme = useColorScheme() ?? "dark";
   const colors = Colors[colorScheme] || Colors.light;
   const backendURL = "https://ai-crop-health.onrender.com";
 
-  const [weatherLoading, setWeatherLoading] = useState(true);
   const [weatherData, setWeatherData] = useState({
-    loaded: false,
     current: {
       temperature_2m: null as number | null,
       weather_description: "",
@@ -35,27 +33,22 @@ const HomeScreen = () => {
       relativeHumidity: null as number | null,
     },
   });
+  const [lastFetched, setLastFetched] = useState<number | null>(null);
+
+  const prevLat = useRef<number | null>(null);
+  const prevLon = useRef<number | null>(null);
 
   const { location, errorMsg } = useLocationPermission();
 
   const getWeatherData = useCallback(
     async (lat: number, long: number) => {
-      setWeatherLoading(true);
       try {
         const response = await axios.post(
           `${backendURL}/api/weather/forecast`,
-          {
-            lat,
-            long,
-          }
+          { lat, long }
         );
-
-        // DEBUG log
-        console.log("Weather API response:", response.data);
-
         if (response.data?.success && response.data.body) {
           setWeatherData({
-            loaded: true,
             current: {
               temperature_2m:
                 response.data.body.current?.temperature_2m ?? null,
@@ -75,20 +68,35 @@ const HomeScreen = () => {
                 response.data.body.tomorrow?.relative_humidity_2m ?? null,
             },
           });
+          setLastFetched(Date.now());
         }
       } catch (e) {
         console.error("Weather API error:", e);
-      } finally {
-        setWeatherLoading(false);
       }
     },
     [backendURL]
   );
 
   useEffect(() => {
-    if (location) {
+    if (
+      location &&
+      (prevLat.current === null ||
+        prevLon.current === null ||
+        location.coords.latitude !== prevLat.current ||
+        location.coords.longitude !== prevLon.current)
+    ) {
+      prevLat.current = location.coords.latitude;
+      prevLon.current = location.coords.longitude;
       getWeatherData(location.coords.latitude, location.coords.longitude);
     }
+  }, [location, getWeatherData]);
+
+  useEffect(() => {
+    if (!location) return;
+    const interval = setInterval(() => {
+      getWeatherData(location.coords.latitude, location.coords.longitude);
+    }, TEN_MINUTES_MS);
+    return () => clearInterval(interval);
   }, [location, getWeatherData]);
 
   const avgTemperatureTomorrow =
@@ -97,10 +105,20 @@ const HomeScreen = () => {
       ? (weatherData.tomorrow.temperature_max +
           weatherData.tomorrow.temperature_min) /
         2
-      : 0;
+      : null;
 
   const formatHumidity = (val: number | null | undefined) =>
-    typeof val === "number" ? `${Math.floor(val)}%` : "";
+    typeof val === "number" ? `${Math.floor(val)}%` : DEFAULT_HUMIDITY;
+
+  const isCurrentLoaded =
+    weatherData.current.temperature_2m !== null &&
+    weatherData.current.weather_description !== "" &&
+    weatherData.current.relative_humidity_2m !== null;
+
+  const isTomorrowLoaded =
+    weatherData.tomorrow.temperature_max !== null &&
+    weatherData.tomorrow.temperature_min !== null &&
+    weatherData.tomorrow.weather_description !== "";
 
   return (
     <AuthProvider>
@@ -141,50 +159,46 @@ const HomeScreen = () => {
 
         {/* Weather Card: Today */}
         <View style={styles.weatherContainer}>
-          {weatherLoading ? (
-            <ActivityIndicator
-              size="large"
-              color="#0369a1"
-              style={{ flex: 1, paddingVertical: 32 }}
-            />
-          ) : (
-            <WeatherCard
-              colors={["#e0f2fe", "#bae6fd"]}
-              Icon={Sun}
-              day="Today"
-              temperature={`${weatherData.current.temperature_2m ?? 0}°C`}
-              weather={{
-                description: weatherData.current.weather_description,
-                relativeHumidity: formatHumidity(
-                  weatherData.current.relative_humidity_2m
-                ),
-              }}
-            />
-          )}
+          <WeatherCard
+            colors={["#e0f2fe", "#bae6fd"]}
+            Icon={Sun}
+            day="Today"
+            temperature={
+              isCurrentLoaded
+                ? `${weatherData.current.temperature_2m}°C`
+                : `${DEFAULT_TEMPERATURE}°C`
+            }
+            weather={{
+              description: isCurrentLoaded
+                ? weatherData.current.weather_description
+                : DEFAULT_DESCRIPTION,
+              relativeHumidity: isCurrentLoaded
+                ? formatHumidity(weatherData.current.relative_humidity_2m)
+                : DEFAULT_HUMIDITY,
+            }}
+          />
         </View>
 
         {/* Weather Card: Tomorrow */}
         <View style={styles.weatherContainer}>
-          {weatherLoading ? (
-            <ActivityIndicator
-              size="large"
-              color="#0369a1"
-              style={{ flex: 1, paddingVertical: 32 }}
-            />
-          ) : (
-            <WeatherCard
-              colors={["#f3f4f6", "#f3f4f6"]}
-              Icon={CloudRain}
-              day="Tomorrow"
-              temperature={`${avgTemperatureTomorrow ?? 0}°C`}
-              weather={{
-                description: weatherData.tomorrow.weather_description,
-                relativeHumidity: formatHumidity(
-                  weatherData.tomorrow.relativeHumidity
-                ),
-              }}
-            />
-          )}
+          <WeatherCard
+            colors={["#f3f4f6", "#f3f4f6"]}
+            Icon={CloudRain}
+            day="Tomorrow"
+            temperature={
+              isTomorrowLoaded && avgTemperatureTomorrow !== null
+                ? `${avgTemperatureTomorrow}°C`
+                : `${DEFAULT_TEMPERATURE}°C`
+            }
+            weather={{
+              description: isTomorrowLoaded
+                ? weatherData.tomorrow.weather_description
+                : DEFAULT_DESCRIPTION,
+              relativeHumidity: isTomorrowLoaded
+                ? formatHumidity(weatherData.tomorrow.relativeHumidity)
+                : DEFAULT_HUMIDITY,
+            }}
+          />
         </View>
       </ScrollView>
     </AuthProvider>
